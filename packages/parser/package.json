@@ -1,0 +1,10 @@
+{
+  "name": "@seergraph/parser",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@seergraph/shared": "workspace:*"
+  }
+}

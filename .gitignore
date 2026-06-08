@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+coverage/
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Turbo (ONLY KEEP IF I ADD TURBO LATER)
+.turbo
+
+# Test artifacts
+coverage/
+.nyc_output/
+
+# pnpm
+.pnpm-store/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
