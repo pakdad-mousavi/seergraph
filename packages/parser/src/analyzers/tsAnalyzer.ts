@@ -315,23 +315,6 @@ const extractSymbols = (sourceFile: SourceFile, relativePath: string) => {
 
         break;
       }
-
-      // case "MethodDeclaration": {
-      //   const methodDecl = node as MethodDeclaration;
-
-      //   // Add method
-      //   const callstack = getCallstack(methodDecl, relativePath);
-      //   const id = getSymbolId([{ name: methodDecl.getName(), kind: methodDecl.getKindName() }, ...callstack]);
-
-      //   symbols.push({
-      //     id,
-      //     name: methodDecl.getName(),
-      //     kind: "method",
-      //     location: getLocation(methodDecl, relativePath),
-      //   });
-
-      //   break;
-      // }
     }
   });
 
