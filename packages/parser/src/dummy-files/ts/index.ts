@@ -105,11 +105,13 @@ const randomArrayOfNumbers = [1, 2, 3].map((n) => n * 2);
 ((x) => x * 2)(1);
 
 // CALLBACK SHOULD BE IGNORED
+// @ts-ignore
 express.route("/get", (req, res) => {
   res.send("hello world");
 });
 
 // CALLBACK SHOULD BE IGNORED
+// @ts-ignore
 const value = express.route("/get", (req, res) => {
   res.send("hello world");
 });
@@ -129,8 +131,18 @@ const y = () => {
   }
 };
 
+const abc = 54,
+  web = {
+    x() {
+      console.log("123");
+    },
+  },
+  j = 2;
+
 console.log(PrivateUserService.getUser());
 
 const userModel = new PrivateUserService("my-model", "my-prop");
 
 userModel.getSession();
+
+export const helloWorld = "hello!";
