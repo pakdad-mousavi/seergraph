@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "scripts": {
     "build": "tsc",
-    "dev": "tsx src/index.ts"
+    "dev": "tsx src/index.ts",
+    "test": "npx vitest",
+    "test-dev": "npx vitest dev"
   },
   "dependencies": {
     "@seergraph/shared": "workspace:*",

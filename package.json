@@ -6,7 +6,8 @@
   "main": "index.js",
   "scripts": {
     "build": "pnpm -r build",
-    "dev": "pnpm -r dev"
+    "dev": "pnpm -r dev",
+    "test": "pnpm -r test"
   },
   "keywords": [],
   "author": "",
@@ -20,7 +21,8 @@
   },
   "type": "module",
   "devDependencies": {
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
   },
   "dependencies": {
     "@types/node": "^25.9.2"
