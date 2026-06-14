@@ -25,7 +25,7 @@ export type SymbolKind =
   | "enum"
   | "type"
   | "variable"
-  | "constant"
+  | "property"
   | "module";
 
 /**

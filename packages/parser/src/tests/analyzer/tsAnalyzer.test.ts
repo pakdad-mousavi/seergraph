@@ -293,8 +293,239 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     ]);
   });
 
-  test("Creates a symbol for an object's arrow functions/function expressions", { todo: true });
-  test("If an object contains callable descendants, intermediate objects are treated as namespaces", { todo: true });
+  test("Creates a symbol for an object's properties that are arrow functions/function expressions", () => {
+    const code = `
+    const obj = {
+      x: () => {},
+      y: function () {},
+      z() {}
+    }
+    `;
+
+    const { error, symbols, diagnostics } = tsAnalyzer("./", code, true);
+
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+    expect(symbols).toStrictEqual([
+      {
+        id: "dummy-file.ts#obj",
+        kind: "variable",
+        location: {
+          endChar: 81,
+          endLine: 6,
+          fileId: "dummy-file.ts",
+          startChar: 11,
+          startLine: 2,
+        },
+        name: "obj",
+      },
+      {
+        id: "dummy-file.ts#obj.x",
+        kind: "method",
+        location: {
+          endChar: 36,
+          endLine: 3,
+          fileId: "dummy-file.ts",
+          startChar: 28,
+          startLine: 3,
+        },
+        name: "x",
+      },
+      {
+        id: "dummy-file.ts#obj.y",
+        kind: "method",
+        location: {
+          endChar: 61,
+          endLine: 4,
+          fileId: "dummy-file.ts",
+          startChar: 47,
+          startLine: 4,
+        },
+        name: "y",
+      },
+      {
+        id: "dummy-file.ts#obj.z",
+        kind: "method",
+        location: {
+          endChar: 75,
+          endLine: 5,
+          fileId: "dummy-file.ts",
+          startChar: 69,
+          startLine: 5,
+        },
+        name: "z",
+      },
+    ]);
+  });
+
+  test("If an object contains callable descendants, intermediate objects are treated as namespaces", () => {
+    const code = `
+    const api = {
+      users: {
+        get() {},
+        post: () => {},
+        delete: function () {},
+
+        patchRelated: {
+          patch() {}
+        }
+      },
+
+      admins: {
+        get() {},
+        post: () => {},
+        delete: function () {}
+      },
+
+      theme: {
+        color: "red",
+        size: 12
+      }
+    }
+    `;
+
+    const { error, symbols, diagnostics } = tsAnalyzer("./", code, true);
+
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    expect(symbols).toStrictEqual([
+      {
+        id: "dummy-file.ts#api",
+        kind: "variable",
+        location: {
+          endChar: 340,
+          endLine: 23,
+          fileId: "dummy-file.ts",
+          startChar: 11,
+          startLine: 2,
+        },
+        name: "api",
+      },
+      {
+        id: "dummy-file.ts#api.users.get",
+        kind: "method",
+        location: {
+          endChar: 50,
+          endLine: 4,
+          fileId: "dummy-file.ts",
+          startChar: 42,
+          startLine: 4,
+        },
+        name: "get",
+      },
+      {
+        id: "dummy-file.ts#api.users.post",
+        kind: "method",
+        location: {
+          endChar: 74,
+          endLine: 5,
+          fileId: "dummy-file.ts",
+          startChar: 66,
+          startLine: 5,
+        },
+        name: "post",
+      },
+      {
+        id: "dummy-file.ts#api.users.delete",
+        kind: "method",
+        location: {
+          endChar: 106,
+          endLine: 6,
+          fileId: "dummy-file.ts",
+          startChar: 92,
+          startLine: 6,
+        },
+        name: "delete",
+      },
+      {
+        id: "dummy-file.ts#api.users.patchRelated.patch",
+        kind: "method",
+        location: {
+          endChar: 153,
+          endLine: 9,
+          fileId: "dummy-file.ts",
+          startChar: 143,
+          startLine: 9,
+        },
+        name: "patch",
+      },
+      {
+        id: "dummy-file.ts#api.admins.get",
+        kind: "method",
+        location: {
+          endChar: 206,
+          endLine: 14,
+          fileId: "dummy-file.ts",
+          startChar: 198,
+          startLine: 14,
+        },
+        name: "get",
+      },
+      {
+        id: "dummy-file.ts#api.admins.post",
+        kind: "method",
+        location: {
+          endChar: 230,
+          endLine: 15,
+          fileId: "dummy-file.ts",
+          startChar: 222,
+          startLine: 15,
+        },
+        name: "post",
+      },
+      {
+        id: "dummy-file.ts#api.admins.delete",
+        kind: "method",
+        location: {
+          endChar: 262,
+          endLine: 16,
+          fileId: "dummy-file.ts",
+          startChar: 248,
+          startLine: 16,
+        },
+        name: "delete",
+      },
+      {
+        id: "dummy-file.ts#api.users",
+        kind: "property",
+        location: {
+          endChar: 171,
+          endLine: 11,
+          fileId: "dummy-file.ts",
+          startChar: 25,
+          startLine: 3,
+        },
+        name: "users",
+      },
+      {
+        id: "dummy-file.ts#api.users.patchRelated",
+        kind: "property",
+        location: {
+          endChar: 163,
+          endLine: 10,
+          fileId: "dummy-file.ts",
+          startChar: 117,
+          startLine: 8,
+        },
+        name: "patchRelated",
+      },
+      {
+        id: "dummy-file.ts#api.admins",
+        kind: "property",
+        location: {
+          endChar: 270,
+          endLine: 17,
+          fileId: "dummy-file.ts",
+          startChar: 180,
+          startLine: 13,
+        },
+        name: "admins",
+      },
+    ]);
+  });
+
+  test("Creates a symbol for a function's methods", { todo: true });
   test("Creates a symbol for default exports, whether named or not", { todo: true });
   test("Creates a symbol for types", { todo: true });
   test("Creates a symbol for interfaces", { todo: true });

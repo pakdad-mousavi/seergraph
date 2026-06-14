@@ -146,3 +146,29 @@ const userModel = new PrivateUserService("my-model", "my-prop");
 userModel.getSession();
 
 export const helloWorld = "hello!";
+
+// Object should be taken, as it has callable entities within
+const api = {
+  // Property and methods should be taken
+  users: {
+    get() {},
+    post() {},
+  },
+  // Property and methods should be taken
+  admin: {
+    get() {},
+    update() {},
+    post: function () {},
+    delete: () => {},
+  },
+  // Property should be ignored
+  manager: {
+    age: 123,
+  },
+};
+
+// Objects with properties only should be ignored
+const config = {
+  color: "red",
+  size: 12,
+};

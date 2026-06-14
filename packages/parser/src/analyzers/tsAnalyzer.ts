@@ -10,6 +10,7 @@ import {
   FunctionExpression,
   MethodDeclaration,
   Node,
+  ObjectLiteralExpression,
   Project,
   SourceFile,
   SyntaxKind,
@@ -38,7 +39,6 @@ const getParentId = (node: Node, relativePath: string) => {
 };
 
 const getSymbolId = (callstack: { name: string; kind: string }[]) => {
-  console.log("XXXX", callstack);
   const id: string[] = [];
   let isFirstIteration = true;
 
@@ -55,7 +55,6 @@ const getSymbolId = (callstack: { name: string; kind: string }[]) => {
   });
 
   // Return id
-  console.log(id.join(""));
   return id.join("");
 };
 
@@ -75,6 +74,7 @@ const getCallstack = (node: Node, relativePath: string) => {
 
     // CLASSES
     "ClassDeclaration",
+    "ObjectLiteralExpression",
   ];
 
   const stack = [];
@@ -82,7 +82,6 @@ const getCallstack = (node: Node, relativePath: string) => {
   let ignoreNextVariableDecl = node.getKindName() === "ArrowFunction" || node.getKindName() === "FunctionExpression";
 
   const ancestors = node.getAncestors();
-  console.log(ancestors.map((a) => a.getKindName()));
   for (const ancestor of ancestors) {
     const isBlock = ancestor.getKindName() === "Block";
     const shouldSkipVariable = ignoreNextVariableDecl && ancestor.getKindName() === "VariableDeclaration";
@@ -110,6 +109,7 @@ const getCallstack = (node: Node, relativePath: string) => {
       | FunctionDeclaration
       | MethodDeclaration
       | VariableDeclaration
+      | ObjectLiteralExpression
       | ClassDeclaration;
 
     let ancestorName: string;
@@ -122,6 +122,12 @@ const getCallstack = (node: Node, relativePath: string) => {
         const parent = maybeNamedAncestor.getParentIfKind(SyntaxKind.VariableDeclaration);
         if (!parent) throw new Error("Anonymous arrow function detected");
         ancestorName = parent.getName();
+        break;
+      case "ObjectLiteralExpression":
+        const property = maybeNamedAncestor.getParentIfKind(SyntaxKind.PropertyAssignment);
+        if (!property) continue; // Not a property of another object, skip
+
+        ancestorName = property.getName();
         break;
       default:
         const namedAncestor = maybeNamedAncestor as
@@ -174,8 +180,82 @@ const extractSymbols = (sourceFile: SourceFile, relativePath: string) => {
         const exprKind = expr.getKindName();
         const name = varDecl.getName();
 
-        // Handle arrow functions and function expressions (stored as a variable)
-        if (exprKind === "FunctionExpression" || exprKind === "ArrowFunction") {
+        const methodLikeKinds = ["ArrowFunction", "FunctionExpression", "MethodDeclaration"];
+
+        // If the value of the variable is an object
+        if (exprKind === "ObjectLiteralExpression") {
+          const properties = expr.getDescendantsOfKind(SyntaxKind.PropertyAssignment);
+          const methodChildren = new Set(
+            properties.flatMap((p) => p.getDescendants().filter((d) => methodLikeKinds.includes(d.getKindName()))),
+          );
+          const directMethods = expr.getDescendantsOfKind(SyntaxKind.MethodDeclaration);
+          for (const method of directMethods) methodChildren.add(method);
+          const objectChildren = expr.getDescendantsOfKind(SyntaxKind.ObjectLiteralExpression);
+
+          // Only take the object if it has callable methods anywhere inside
+          if (methodChildren.size > 0) {
+            const callstack = getCallstack(expr, relativePath);
+            const id = getSymbolId(callstack);
+
+            symbols.push({
+              id,
+              name,
+              kind: "variable",
+              location: getLocation(varDecl, relativePath),
+            });
+
+            // Add all methods of the object that are method-like
+            for (const method of methodChildren) {
+              let name;
+              let nodeForCallstack;
+              if (method.getKindName() === "ArrowFunction" || method.getKindName() === "FunctionExpression") {
+                nodeForCallstack = method.getParentIfKind(SyntaxKind.PropertyAssignment);
+                if (!nodeForCallstack) {
+                  throw Error(
+                    "Arrow function or function expression not assigned as a property found inside of an object.",
+                  );
+                }
+
+                name = nodeForCallstack.getName();
+              } else {
+                nodeForCallstack = method;
+                name = (method as MethodDeclaration).getName();
+                console.log("uhrbfvoiwejbvqkwjnvqekdwjvbeqwdkjb");
+              }
+
+              const callstack = getCallstack(nodeForCallstack, relativePath);
+              const id = getSymbolId([{ name, kind: nodeForCallstack.getKindName() }, ...callstack]);
+
+              symbols.push({
+                id,
+                name: name,
+                kind: "method",
+                location: getLocation(method, relativePath),
+              });
+            }
+
+            // Add all objects that act as namespaces, for callable methods only
+            for (const obj of objectChildren) {
+              if (obj.getDescendants().some((d) => methodLikeKinds.includes(d.getKindName()))) {
+                const property = obj.getParentIfKind(SyntaxKind.PropertyAssignment);
+                if (!property) continue;
+                const callstack = getCallstack(property, relativePath);
+                const id = getSymbolId([{ name: property.getName(), kind: property.getKindName() }, ...callstack]);
+
+                symbols.push({
+                  id,
+                  name: property.getName(),
+                  kind: "property",
+                  location: getLocation(property, relativePath),
+                });
+              }
+            }
+          }
+        }
+
+        // If the value of the variable is a function expression or arrow function
+        else if (exprKind === "FunctionExpression" || exprKind === "ArrowFunction") {
+          // (expr as FunctionDeclaration).getFunctions()
           const callstack = getCallstack(expr, relativePath);
           const id = getSymbolId([{ name, kind: exprKind }, ...callstack]);
 
@@ -187,7 +267,7 @@ const extractSymbols = (sourceFile: SourceFile, relativePath: string) => {
           });
         }
 
-        // Handle exported variables
+        // If the variable is being exported
         else if (varDecl.isExported() && exprKind !== "FunctionExpression" && exprKind !== "ArrowFunction") {
           const callstack = getCallstack(varDecl, relativePath);
           const id = getSymbolId([{ name, kind: nodeType }, ...callstack]);
@@ -198,12 +278,13 @@ const extractSymbols = (sourceFile: SourceFile, relativePath: string) => {
             kind: "variable",
             location: getLocation(varDecl, relativePath),
           });
-        } else if (varDecl) break;
+        }
 
         break;
       }
 
       case "ClassDeclaration": {
+        // Create the class symbol
         const classDecl = node as ClassDeclaration;
         const name = classDecl.getName();
         if (!name) break;
@@ -218,44 +299,43 @@ const extractSymbols = (sourceFile: SourceFile, relativePath: string) => {
           location: getLocation(classDecl, relativePath),
         });
 
-        break;
-      }
+        // Create symbols for the class's methods
+        const methods = classDecl.getMethods();
+        for (const method of methods) {
+          const callstack = getCallstack(method, relativePath);
+          const id = getSymbolId([{ name: method.getName(), kind: method.getKindName() }, ...callstack]);
 
-      case "MethodDeclaration": {
-        const methodDecl = node as MethodDeclaration;
-
-        // Add method
-        const callstack = getCallstack(methodDecl, relativePath);
-        const id = getSymbolId([{ name: methodDecl.getName(), kind: methodDecl.getKindName() }, ...callstack]);
-
-        symbols.push({
-          id,
-          name: methodDecl.getName(),
-          kind: "method",
-          location: getLocation(methodDecl, relativePath),
-        });
-
-        // Check to see if the parent is an object literal
-        const parent = methodDecl.getParentIfKind(SyntaxKind.ObjectLiteralExpression);
-        const varDeclParent = parent?.getParentIfKind(SyntaxKind.VariableDeclaration);
-        if (!parent || !varDeclParent) break;
-
-        const parentCallstack = getCallstack(methodDecl, relativePath);
-        const parentId = getSymbolId([...parentCallstack]);
-
-        symbols.push({
-          id: parentId,
-          name: varDeclParent.getName(),
-          kind: "variable",
-          location: getLocation(parent, relativePath),
-        });
+          symbols.push({
+            id,
+            name: method.getName(),
+            kind: "method",
+            location: getLocation(method, relativePath),
+          });
+        }
 
         break;
       }
+
+      // case "MethodDeclaration": {
+      //   const methodDecl = node as MethodDeclaration;
+
+      //   // Add method
+      //   const callstack = getCallstack(methodDecl, relativePath);
+      //   const id = getSymbolId([{ name: methodDecl.getName(), kind: methodDecl.getKindName() }, ...callstack]);
+
+      //   symbols.push({
+      //     id,
+      //     name: methodDecl.getName(),
+      //     kind: "method",
+      //     location: getLocation(methodDecl, relativePath),
+      //   });
+
+      //   break;
+      // }
     }
   });
 
-  console.log(symbols);
+  console.log(symbols.filter((s) => s.kind));
   return symbols;
 };
 
@@ -291,7 +371,7 @@ export const tsAnalyzer = (...args: AnalyzerArgs): AnalyzerReturn => {
   // Otherwise take in filepaths
   else {
     // Parse input
-    const dummyRelativePath = "./src/dummy-files/index.ts";
+    const dummyRelativePath = "./src/dummy-files/ts/index.ts";
     const dummyPathToChangeToAbsPath = path.resolve(dummyRelativePath);
     project.addSourceFileAtPath(dummyPathToChangeToAbsPath);
     const sourceFile = project.getSourceFileOrThrow(dummyPathToChangeToAbsPath);
