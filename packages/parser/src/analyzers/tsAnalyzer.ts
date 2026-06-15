@@ -38,30 +38,31 @@ const getSymbolId = (callstack: { name: string; kind: string }[]) => {
 const getCallstack = (node: Node, relativePath: string) => {
   const symbolKinds = [
     // TOP-LEVEL
-    "SourceFile",
+    SyntaxKind.SourceFile,
 
     // FUNCTION-RELATED
-    "FunctionDeclaration",
-    "FunctionExpression",
-    "MethodDeclaration",
-    "ArrowFunction",
+    SyntaxKind.FunctionDeclaration,
+    SyntaxKind.FunctionExpression,
+    SyntaxKind.MethodDeclaration,
+    SyntaxKind.ArrowFunction,
 
     // VARIABLES (EXPORT-ONLY SHOULD BE GIVEN)
-    "VariableDeclaration",
+    SyntaxKind.VariableDeclaration,
 
     // CLASSES
-    "ClassDeclaration",
-    "ObjectLiteralExpression",
+    SyntaxKind.ClassDeclaration,
+    SyntaxKind.ObjectLiteralExpression,
   ];
 
   const stack = [];
   const nameKindPairs: { name: string; kind: string }[] = [];
-  let ignoreNextVariableDecl = node.getKindName() === "ArrowFunction" || node.getKindName() === "FunctionExpression";
+  let ignoreNextVariableDecl =
+    node.getKind() === SyntaxKind.ArrowFunction || node.getKind() === SyntaxKind.FunctionExpression;
 
   const ancestors = node.getAncestors();
   for (const ancestor of ancestors) {
-    const isBlock = ancestor.getKindName() === "Block";
-    const shouldSkipVariable = ignoreNextVariableDecl && ancestor.getKindName() === "VariableDeclaration";
+    const isBlock = ancestor.getKind() === SyntaxKind.Block;
+    const shouldSkipVariable = ignoreNextVariableDecl && ancestor.getKind() === SyntaxKind.VariableDeclaration;
 
     if (isBlock) continue;
     if (shouldSkipVariable) {
@@ -69,11 +70,11 @@ const getCallstack = (node: Node, relativePath: string) => {
       continue;
     }
 
-    if (ancestor.getKindName() === "ArrowFunction" || ancestor.getKindName() === "FunctionExpression") {
+    if (ancestor.getKind() === SyntaxKind.ArrowFunction || ancestor.getKind() === SyntaxKind.FunctionExpression) {
       ignoreNextVariableDecl = true;
     }
 
-    if (symbolKinds.includes(ancestor.getKindName())) {
+    if (symbolKinds.includes(ancestor.getKind())) {
       stack.push(ancestor);
     }
   }
@@ -90,17 +91,17 @@ const getCallstack = (node: Node, relativePath: string) => {
       | ClassDeclaration;
 
     let ancestorName: string;
-    switch (maybeNamedAncestor.getKindName()) {
-      case "SourceFile":
+    switch (maybeNamedAncestor.getKind()) {
+      case SyntaxKind.SourceFile:
         ancestorName = relativePath;
         break;
-      case "ArrowFunction":
-      case "FunctionExpression":
+      case SyntaxKind.ArrowFunction:
+      case SyntaxKind.FunctionExpression:
         const parent = maybeNamedAncestor.getParentIfKind(SyntaxKind.VariableDeclaration);
         if (!parent) throw new Error("Anonymous arrow function detected");
         ancestorName = parent.getName();
         break;
-      case "ObjectLiteralExpression":
+      case SyntaxKind.ObjectLiteralExpression:
         const property = maybeNamedAncestor.getParentIfKind(SyntaxKind.PropertyAssignment);
         if (!property) continue; // Not a property of another object, skip
 
