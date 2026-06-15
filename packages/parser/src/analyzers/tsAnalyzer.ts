@@ -17,6 +17,7 @@ import {
   ts,
   VariableDeclaration,
 } from "ts-morph";
+import { writeFileSync } from "node:fs";
 
 const getLocation = (node: Node, fileId: string): Location => {
   return {
@@ -28,34 +29,10 @@ const getLocation = (node: Node, fileId: string): Location => {
   };
 };
 
-const getParentId = (node: Node, relativePath: string) => {
-  const parent = node.getParent();
-  if (parent?.getKindName() === "SourceFile") {
-    return "SourceFile";
-  } else if (parent?.getKindName() === "Block") {
-    const grandparent = parent?.getParent();
-    return grandparent?.getKindName();
-  }
-};
-
 const getSymbolId = (callstack: { name: string; kind: string }[]) => {
-  const id: string[] = [];
-  let isFirstIteration = true;
-
-  // Put id together based on callstack
-  callstack.reverse().forEach((item, idx) => {
-    if (isFirstIteration) {
-      id.push(item.name, "#");
-      isFirstIteration = false;
-    } else if (idx === callstack.length - 1) {
-      id.push(item.name);
-    } else {
-      id.push(item.name, ".");
-    }
-  });
-
-  // Return id
-  return id.join("");
+  const reversed = callstack.reverse();
+  const source = reversed.splice(0, 1)[0];
+  return `${source.name}#${reversed.map((s) => s.name).join(".")}`;
 };
 
 const getCallstack = (node: Node, relativePath: string) => {
