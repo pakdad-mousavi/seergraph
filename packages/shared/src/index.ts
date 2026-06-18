@@ -6,39 +6,18 @@ export type LanguageExtension = ".ts" | ".js" | ".py";
 /**
   The language being used in a file, ex: `typescript`, `javascript`, etc.
 */
-export type Language =
-  | "typescript"
-  | "javascript"
-  | "python"
-  | "go"
-  | "rust"
-  | "java";
+export type Language = "typescript" | "javascript" | "python" | "go" | "rust" | "java";
 
 /**
   The type of the symbol, ex: `function`, `class`, etc.
 */
-export type SymbolKind =
-  | "function"
-  | "method"
-  | "class"
-  | "interface"
-  | "enum"
-  | "type"
-  | "variable"
-  | "property"
-  | "module";
+export type SymbolKind = "function" | "method" | "class" | "interface" | "enum" | "type" | "object";
+// | "property"
 
 /**
   The type of the edge connecting any two nodes.
 */
-export type EdgeType =
-  | "imports"
-  | "calls"
-  | "references"
-  | "inherits"
-  | "implements"
-  | "contains"
-  | "exports";
+export type EdgeType = "imports" | "calls" | "references" | "inherits" | "implements" | "contains" | "exports";
 
 /**
   Defines the location of a specific symbol inside of a file.
@@ -82,7 +61,7 @@ export interface Edge {
   to: string;
   type: EdgeType;
 
-  // optional metadata 
+  // optional metadata
   meta?: {
     importName?: string;
     aliasName?: string;

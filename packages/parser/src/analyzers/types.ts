@@ -5,8 +5,10 @@ export interface SymbolFact {
   name: string;
   kind: SymbolKind;
   location: Location;
-
-  parentSymbolId?: string;
+  parentId: string | null;
+  metadata?: {
+    isExported: boolean;
+  };
 }
 
 export interface ImportFact {

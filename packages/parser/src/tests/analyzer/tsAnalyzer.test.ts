@@ -63,6 +63,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     expect(symbols).toStrictEqual([
       {
         id: "dummy-file.ts#square",
+        parentId: "dummy-file.ts",
         kind: "function",
         location: {
           startChar: 65,
@@ -94,6 +95,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     expect(symbols).toStrictEqual([
       {
         id: "dummy-file.ts#square",
+        parentId: "dummy-file.ts",
         kind: "function",
         location: {
           endChar: 126,
@@ -119,6 +121,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     expect(symbols).toStrictEqual([
       {
         id: "dummy-file.ts#NamedClass",
+        parentId: "dummy-file.ts",
         kind: "class",
         location: {
           endChar: 24,
@@ -150,6 +153,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     expect(methodSymbols).toStrictEqual([
       {
         id: "dummy-file.ts#NamedClass.myMethodOne",
+        parentId: "dummy-file.ts#NamedClass",
         kind: "method",
         location: {
           endChar: 54,
@@ -162,6 +166,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
       },
       {
         id: "dummy-file.ts#NamedClass.myMethodTwo",
+        parentId: "dummy-file.ts#NamedClass",
         kind: "method",
         location: {
           endChar: 84,
@@ -174,6 +179,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
       },
       {
         id: "dummy-file.ts#NamedClass.myMethodThree",
+        parentId: "dummy-file.ts#NamedClass",
         kind: "method",
         location: {
           endChar: 123,
@@ -203,6 +209,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     expect(symbols).toStrictEqual([
       {
         id: "dummy-file.ts#x",
+        parentId: "dummy-file.ts",
         kind: "function",
         location: {
           endChar: 24,
@@ -215,6 +222,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
       },
       {
         id: "dummy-file.ts#y",
+        parentId: "dummy-file.ts",
         kind: "function",
         location: {
           endChar: 66,
@@ -227,6 +235,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
       },
       {
         id: "dummy-file.ts#z",
+        parentId: "dummy-file.ts",
         kind: "function",
         location: {
           endChar: 110,
@@ -256,6 +265,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     expect(symbols).toStrictEqual([
       {
         id: "dummy-file.ts#x",
+        parentId: "dummy-file.ts",
         kind: "function",
         location: {
           endChar: 89,
@@ -268,6 +278,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
       },
       {
         id: "dummy-file.ts#x.y",
+        parentId: "dummy-file.ts#x",
         kind: "function",
         location: {
           endChar: 83,
@@ -280,6 +291,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
       },
       {
         id: "dummy-file.ts#x.y.z",
+        parentId: "dummy-file.ts#x.y",
         kind: "function",
         location: {
           endChar: 75,
@@ -309,18 +321,20 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     expect(symbols).toStrictEqual([
       {
         id: "dummy-file.ts#obj",
-        kind: "variable",
+        parentId: "dummy-file.ts",
+        kind: "object",
         location: {
           endChar: 81,
           endLine: 6,
           fileId: "dummy-file.ts",
-          startChar: 11,
+          startChar: 17,
           startLine: 2,
         },
         name: "obj",
       },
       {
         id: "dummy-file.ts#obj.x",
+        parentId: "dummy-file.ts#obj",
         kind: "method",
         location: {
           endChar: 36,
@@ -333,6 +347,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
       },
       {
         id: "dummy-file.ts#obj.y",
+        parentId: "dummy-file.ts#obj",
         kind: "method",
         location: {
           endChar: 61,
@@ -345,6 +360,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
       },
       {
         id: "dummy-file.ts#obj.z",
+        parentId: "dummy-file.ts#obj",
         kind: "method",
         location: {
           endChar: 75,
@@ -392,15 +408,29 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     expect(symbols).toStrictEqual([
       {
         id: "dummy-file.ts#api",
-        kind: "variable",
+        kind: "object",
         location: {
           endChar: 340,
           endLine: 23,
           fileId: "dummy-file.ts",
-          startChar: 11,
+          startChar: 17,
           startLine: 2,
         },
         name: "api",
+        parentId: "dummy-file.ts",
+      },
+      {
+        id: "dummy-file.ts#api.users",
+        kind: "object",
+        location: {
+          endChar: 171,
+          endLine: 11,
+          fileId: "dummy-file.ts",
+          startChar: 32,
+          startLine: 3,
+        },
+        name: "users",
+        parentId: "dummy-file.ts#api",
       },
       {
         id: "dummy-file.ts#api.users.get",
@@ -413,6 +443,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           startLine: 4,
         },
         name: "get",
+        parentId: "dummy-file.ts#api.users",
       },
       {
         id: "dummy-file.ts#api.users.post",
@@ -425,6 +456,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           startLine: 5,
         },
         name: "post",
+        parentId: "dummy-file.ts#api.users",
       },
       {
         id: "dummy-file.ts#api.users.delete",
@@ -437,6 +469,20 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           startLine: 6,
         },
         name: "delete",
+        parentId: "dummy-file.ts#api.users",
+      },
+      {
+        id: "dummy-file.ts#api.users.patchRelated",
+        kind: "object",
+        location: {
+          endChar: 163,
+          endLine: 10,
+          fileId: "dummy-file.ts",
+          startChar: 131,
+          startLine: 8,
+        },
+        name: "patchRelated",
+        parentId: "dummy-file.ts#api.users",
       },
       {
         id: "dummy-file.ts#api.users.patchRelated.patch",
@@ -449,6 +495,20 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           startLine: 9,
         },
         name: "patch",
+        parentId: "dummy-file.ts#api.users.patchRelated",
+      },
+      {
+        id: "dummy-file.ts#api.admins",
+        kind: "object",
+        location: {
+          endChar: 270,
+          endLine: 17,
+          fileId: "dummy-file.ts",
+          startChar: 188,
+          startLine: 13,
+        },
+        name: "admins",
+        parentId: "dummy-file.ts#api",
       },
       {
         id: "dummy-file.ts#api.admins.get",
@@ -461,6 +521,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           startLine: 14,
         },
         name: "get",
+        parentId: "dummy-file.ts#api.admins",
       },
       {
         id: "dummy-file.ts#api.admins.post",
@@ -473,6 +534,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           startLine: 15,
         },
         name: "post",
+        parentId: "dummy-file.ts#api.admins",
       },
       {
         id: "dummy-file.ts#api.admins.delete",
@@ -485,48 +547,14 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           startLine: 16,
         },
         name: "delete",
-      },
-      {
-        id: "dummy-file.ts#api.users",
-        kind: "property",
-        location: {
-          endChar: 171,
-          endLine: 11,
-          fileId: "dummy-file.ts",
-          startChar: 25,
-          startLine: 3,
-        },
-        name: "users",
-      },
-      {
-        id: "dummy-file.ts#api.users.patchRelated",
-        kind: "property",
-        location: {
-          endChar: 163,
-          endLine: 10,
-          fileId: "dummy-file.ts",
-          startChar: 117,
-          startLine: 8,
-        },
-        name: "patchRelated",
-      },
-      {
-        id: "dummy-file.ts#api.admins",
-        kind: "property",
-        location: {
-          endChar: 270,
-          endLine: 17,
-          fileId: "dummy-file.ts",
-          startChar: 180,
-          startLine: 13,
-        },
-        name: "admins",
+        parentId: "dummy-file.ts#api.admins",
       },
     ]);
   });
 
-  test("Creates a symbol for a function's methods", { todo: true });
   test("Creates a symbol for default exports, whether named or not", { todo: true });
+  test("Creates a symbol for a function's methods", { todo: true });
+
   test("Creates a symbol for types", { todo: true });
   test("Creates a symbol for interfaces", { todo: true });
   test("Creates a symbol for enums", { todo: true });
