@@ -552,8 +552,609 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     ]);
   });
 
-  test("Creates a symbol for default exports, whether named or not", { todo: true });
-  test("Creates a symbol for a function's methods", { todo: true });
+  test("Ignores exports of unexported functions/objects/classes", () => {
+    const code = `
+    const x = () => {};
+    const y = function () {};
+    const z = function add() {};
+    const i = {
+      abc: 123,
+      def: {
+        ghi: 456,
+      }
+    };
+    const j = i.def.ghi;
+    const k = class {}
+    class MyCls {}
+    `;
+
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    expect(exportEdges).toStrictEqual([]);
+  });
+
+  test("Ignores exports of uncallable literals without uncallable values", () => {
+    const code = `
+    export const x = 123;
+    export const y = 'hello world';
+    export const z = [() => {}, function () {}, {}, 123, 'string'];
+    `;
+
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    expect(exportEdges).toStrictEqual([]);
+  });
+
+  test("Creates an edge for exported unnamed function declarations", () => {
+    const code = `
+    export const x = function () {};
+    `;
+
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    expect(exportEdges).toStrictEqual([
+      {
+        from: "dummy-file.ts",
+        id: expect.any(String),
+        meta: {
+          exportedAs: "x",
+          isDefault: false,
+        },
+        to: "dummy-file.ts#x",
+        type: "exports",
+      },
+    ]);
+  });
+
+  test("Creates an edge for exported named function declarations", () => {
+    const code = `
+    export const x = function add() {};
+    `;
+
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    expect(exportEdges).toStrictEqual([
+      {
+        from: "dummy-file.ts",
+        id: expect.any(String),
+        meta: {
+          exportedAs: "x",
+          isDefault: false,
+        },
+        to: "dummy-file.ts#x",
+        type: "exports",
+      },
+    ]);
+  });
+
+  test("Creates an edge for exported arrow functions", () => {
+    const code = `
+    export const x = () => {};
+    `;
+
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    expect(exportEdges).toStrictEqual([
+      {
+        from: "dummy-file.ts",
+        id: expect.any(String),
+        meta: {
+          exportedAs: "x",
+          isDefault: false,
+        },
+        to: "dummy-file.ts#x",
+        type: "exports",
+      },
+    ]);
+  });
+
+  test("Creates an edge for exported arrow functions", () => {
+    const code = `
+    export const x = () => {};
+    `;
+
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    expect(exportEdges).toStrictEqual([
+      {
+        from: "dummy-file.ts",
+        id: expect.any(String),
+        meta: {
+          exportedAs: "x",
+          isDefault: false,
+        },
+        to: "dummy-file.ts#x",
+        type: "exports",
+      },
+    ]);
+  });
+
+  test("Creates an edge for exported classes", () => {
+    const code = `
+    export class x {};
+    `;
+
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    expect(exportEdges).toStrictEqual([
+      {
+        from: "dummy-file.ts",
+        id: expect.any(String),
+        meta: {
+          exportedAs: "x",
+          isDefault: false,
+        },
+        to: "dummy-file.ts#x",
+        type: "exports",
+      },
+    ]);
+  });
+
+  test("Creates an edge for exported objects, but not their children", () => {
+    const code = `
+    export const x = {
+      test: () => {}
+    };
+    `;
+
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    expect(exportEdges).toStrictEqual([
+      {
+        from: "dummy-file.ts",
+        id: expect.any(String),
+        meta: {
+          exportedAs: "x",
+          isDefault: false,
+        },
+        to: "dummy-file.ts#x",
+        type: "exports",
+      },
+    ]);
+  });
+
+  test("Creates an edge for exported references, with and without aliases", () => {
+    const code = `
+    const x = () => {};
+    const y = function () {};
+    const z = { test() {} };
+    const i = 123;
+    export { x, y, z as j, i };
+    `;
+
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    expect(exportEdges).toStrictEqual([
+      {
+        from: "dummy-file.ts",
+        id: expect.any(String),
+        meta: {
+          aliasName: undefined,
+          exportedAs: "x",
+        },
+        to: "dummy-file.ts#x",
+        type: "exports",
+      },
+      {
+        from: "dummy-file.ts",
+        id: expect.any(String),
+        meta: {
+          aliasName: undefined,
+          exportedAs: "y",
+        },
+        to: "dummy-file.ts#y",
+        type: "exports",
+      },
+      {
+        from: "dummy-file.ts",
+        id: expect.any(String),
+        meta: {
+          aliasName: "j",
+          exportedAs: "z",
+        },
+        to: "dummy-file.ts#z",
+        type: "exports",
+      },
+      {
+        from: "dummy-file.ts",
+        id: expect.any(String),
+        meta: {
+          aliasName: undefined,
+          exportedAs: "i",
+        },
+        to: "dummy-file.ts#i",
+        type: "exports",
+      },
+    ]);
+  });
+
+  test("Creates an edge and symbol for a default exported function", () => {
+    const code = `
+    export default function () {};
+    `;
+
+    const { error, symbols, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    expect(exportEdges).toStrictEqual([
+      {
+        from: "dummy-file.ts",
+        id: expect.any(String),
+        meta: {
+          exportedAs: "default",
+          isDefault: true,
+        },
+        to: "dummy-file.ts#default",
+        type: "exports",
+      },
+    ]);
+
+    expect(symbols).toStrictEqual([
+      {
+        id: "dummy-file.ts#default",
+        kind: "function",
+        location: {
+          endChar: 34,
+          endLine: 2,
+          fileId: "dummy-file.ts",
+          startChar: 5,
+          startLine: 2,
+        },
+        name: "default",
+        parentId: "dummy-file.ts",
+      },
+    ]);
+  });
+
+  test("Creates an edge and symbol for a default exported function with a name", () => {
+    const code = `
+    export default function add() {};
+    `;
+
+    const { error, symbols, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    expect(exportEdges).toStrictEqual([
+      {
+        from: "dummy-file.ts",
+        id: expect.any(String),
+        meta: {
+          exportedAs: "default",
+          isDefault: true,
+        },
+        to: "dummy-file.ts#default",
+        type: "exports",
+      },
+    ]);
+
+    expect(symbols).toStrictEqual([
+      {
+        id: "dummy-file.ts#default",
+        kind: "function",
+        location: {
+          endChar: 37,
+          endLine: 2,
+          fileId: "dummy-file.ts",
+          startChar: 5,
+          startLine: 2,
+        },
+        name: "default",
+        parentId: "dummy-file.ts",
+      },
+    ]);
+  });
+
+  test("Creates an edge for a default export referencing a function declaration", () => {
+    const code = `
+    function add() {}
+
+    export default add;
+    `;
+
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    expect(exportEdges).toStrictEqual([
+      {
+        from: "dummy-file.ts",
+        id: expect.any(String),
+        meta: {
+          exportedAs: "add",
+          isDefault: true,
+        },
+        to: "dummy-file.ts#add",
+        type: "exports",
+      },
+    ]);
+  });
+
+  test("Creates an edge for a default export referencing a function expression", () => {
+    const code = `
+    const add = function () {}
+
+    export default add;
+    `;
+
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    expect(exportEdges).toStrictEqual([
+      {
+        from: "dummy-file.ts",
+        id: expect.any(String),
+        meta: {
+          exportedAs: "add",
+          isDefault: true,
+        },
+        to: "dummy-file.ts#add",
+        type: "exports",
+      },
+    ]);
+  });
+
+  test("Creates an edge for a default export referencing an arrow function", () => {
+    const code = `
+    const add = () => {};
+
+    export default add;
+    `;
+
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    expect(exportEdges).toStrictEqual([
+      {
+        from: "dummy-file.ts",
+        id: expect.any(String),
+        meta: {
+          exportedAs: "add",
+          isDefault: true,
+        },
+        to: "dummy-file.ts#add",
+        type: "exports",
+      },
+    ]);
+  });
+
+  test("Creates an edge for a default exported arrow function", () => {
+    const code = `
+    export default () => {};
+    `;
+
+    const { error, symbols, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    expect(exportEdges).toStrictEqual([
+      {
+        from: "dummy-file.ts",
+        id: expect.any(String),
+        meta: {
+          exportedAs: "default",
+          isDefault: true,
+        },
+        to: "dummy-file.ts#default",
+        type: "exports",
+      },
+    ]);
+
+    expect(symbols).toStrictEqual([
+      {
+        id: "dummy-file.ts#default",
+        kind: "function",
+        location: {
+          endChar: 28,
+          endLine: 2,
+          fileId: "dummy-file.ts",
+          startChar: 20,
+          startLine: 2,
+        },
+        name: "default",
+        parentId: "dummy-file.ts",
+      },
+    ]);
+  });
+
+  test("Creates an edge for a default export referencing an object", () => {
+    const code = `
+    const api = {
+      test: () => {},
+    };
+
+    export default api;
+    `;
+
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    expect(exportEdges).toStrictEqual([
+      {
+        from: "dummy-file.ts",
+        id: expect.any(String),
+        meta: {
+          exportedAs: "api",
+          isDefault: true,
+        },
+        to: "dummy-file.ts#api",
+        type: "exports",
+      },
+    ]);
+  });
+
+  test("Creates an edge and symbols for a default exported object", () => {
+    const code = `
+    export default {
+      test: () => {}
+    };
+    `;
+
+    const { error, symbols, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    expect(exportEdges).toStrictEqual([
+      {
+        from: "dummy-file.ts",
+        id: expect.any(String),
+        meta: {
+          exportedAs: "default",
+          isDefault: true,
+        },
+        to: "dummy-file.ts#default",
+        type: "exports",
+      },
+    ]);
+
+    expect(symbols).toStrictEqual([
+      {
+        id: "dummy-file.ts#default",
+        kind: "object",
+        location: {
+          endChar: 48,
+          endLine: 4,
+          fileId: "dummy-file.ts",
+          startChar: 20,
+          startLine: 2,
+        },
+        name: "default",
+        parentId: "dummy-file.ts",
+      },
+      {
+        id: "dummy-file.ts#default.test",
+        kind: "method",
+        location: {
+          endChar: 42,
+          endLine: 3,
+          fileId: "dummy-file.ts",
+          startChar: 34,
+          startLine: 3,
+        },
+        name: "test",
+        parentId: "dummy-file.ts#default",
+      },
+    ]);
+  });
+
+  test("Creates an edge for a default export referencing a class", () => {
+    const code = `
+    class MyCls {}
+    export default MyCls;
+    `;
+
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    expect(exportEdges).toStrictEqual([
+      {
+        from: "dummy-file.ts",
+        id: expect.any(String),
+        meta: {
+          exportedAs: "MyCls",
+          isDefault: true,
+        },
+        to: "dummy-file.ts#MyCls",
+        type: "exports",
+      },
+    ]);
+  });
+
+  test("Creates an edge for a default exported class and its methods", () => {
+    const code = `
+    export default class {
+      private test() {}
+    };
+    `;
+
+    const { error, symbols, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    expect(exportEdges).toStrictEqual([
+      {
+        from: "dummy-file.ts",
+        id: expect.any(String),
+        meta: {
+          exportedAs: "default",
+          isDefault: true,
+        },
+        to: "dummy-file.ts#default",
+        type: "exports",
+      },
+    ]);
+
+    expect(symbols).toStrictEqual([
+      {
+        id: "dummy-file.ts#default",
+        kind: "class",
+        location: {
+          endChar: 57,
+          endLine: 4,
+          fileId: "dummy-file.ts",
+          startChar: 5,
+          startLine: 2,
+        },
+        name: "default",
+        parentId: "dummy-file.ts",
+      },
+      {
+        id: "dummy-file.ts#default.test",
+        kind: "method",
+        location: {
+          endChar: 51,
+          endLine: 3,
+          fileId: "dummy-file.ts",
+          startChar: 34,
+          startLine: 3,
+        },
+        name: "test",
+        parentId: "dummy-file.ts#default",
+      },
+    ]);
+  });
 
   test("Creates a symbol for types", { todo: true });
   test("Creates a symbol for interfaces", { todo: true });
