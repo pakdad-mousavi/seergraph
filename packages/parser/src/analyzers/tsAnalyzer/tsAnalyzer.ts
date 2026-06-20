@@ -1,5 +1,5 @@
 import { Location, Edge } from "@seergraph/shared";
-import type { SymbolFact } from "./types";
+import type { SymbolFact } from "../types";
 import path from "node:path";
 
 import {

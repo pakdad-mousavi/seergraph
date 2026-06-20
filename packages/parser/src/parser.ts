@@ -4,7 +4,7 @@ import path from "node:path";
 
 import { scanRepo } from "./scanner";
 import { Project } from "ts-morph";
-import { tsAnalyzer } from "./analyzers/tsAnalyzer";
+import { tsAnalyzer } from "./analyzers/tsAnalyzer/tsAnalyzer";
 
 interface AstParser {
   (filePath: string): Promise<ProjectGraph | void>; // TODO: REMOVE VOID

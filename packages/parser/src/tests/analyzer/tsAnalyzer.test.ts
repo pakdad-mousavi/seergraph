@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { tsAnalyzer } from "../../analyzers/tsAnalyzer";
+import { tsAnalyzer } from "../../analyzers/tsAnalyzer/tsAnalyzer";
 import { ts } from "ts-morph";
 
 describe("Typescript analyzer correctly extracts all symbols from a file", () => {
