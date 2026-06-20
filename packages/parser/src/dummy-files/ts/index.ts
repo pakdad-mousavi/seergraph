@@ -1,8 +1,9 @@
 // IMPORTS
-import { login } from "./auth.js";
-import { testFn } from "./someFolder/test.js";
+import myDefExp, { login, logout } from "./auth.js";
+import { testFn as tnt } from "./someFolder/test.js";
+import * as speakMethods from "./someFolder/speak.js";
+import * as allUtilities from "./utils.js";
 import utilities from "./utils.js";
-
 // FUNCTION
 export function run() {
   // ARROW FUNCTION
@@ -25,7 +26,7 @@ export function run() {
 
   // MORE IMPORTED FUNCTIONS
   utilities.utilThree();
-  testFn();
+  tnt();
   login();
 }
 
