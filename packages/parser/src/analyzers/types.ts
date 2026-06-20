@@ -6,9 +6,6 @@ export interface SymbolFact {
   kind: SymbolKind;
   location: Location;
   parentId: string | null;
-  metadata?: {
-    isExported: boolean;
-  };
 }
 
 export interface ImportFact {
