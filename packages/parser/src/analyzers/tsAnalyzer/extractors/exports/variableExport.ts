@@ -1,0 +1,52 @@
+import { Edge } from "@seergraph/shared";
+import { randomUUID } from "node:crypto";
+import { Node, PropertyAssignment, Symbol, VariableDeclaration } from "ts-morph";
+import { getCallstack, getSymbolId } from "../../ast";
+
+export const extractExportsFromVariableDecl = (
+  node: VariableDeclaration,
+  exportSymbol: Symbol,
+  relativePath: string,
+): Edge | null => {
+  // Get the initializer of the exported variable declaration
+  const initializer = node.getInitializer();
+
+  // Only process the following types of variables, and not string/numeric literals
+  if (
+    Node.isArrowFunction(initializer) ||
+    Node.isFunctionExpression(initializer) ||
+    Node.isObjectLiteralExpression(initializer)
+  ) {
+    return {
+      id: randomUUID(),
+      from: relativePath,
+      to: `${relativePath}#${exportSymbol.getName()}`,
+      type: "exports",
+      meta: {
+        exportedAs: exportSymbol.getName(),
+        isDefault: (exportSymbol.getValueDeclaration() as VariableDeclaration).isDefaultExport(),
+      },
+    };
+  }
+
+  if (Node.isPropertyAccessExpression(initializer)) {
+    const propertyAssignment = initializer.getSymbol()?.getDeclarations()[0] as PropertyAssignment;
+    const callstack = getCallstack(propertyAssignment, relativePath);
+    const { id } = getSymbolId([
+      { name: propertyAssignment.getName(), kind: propertyAssignment.getKindName() },
+      ...callstack,
+    ]);
+
+    return {
+      id: randomUUID(),
+      from: relativePath,
+      to: id,
+      type: "exports",
+      meta: {
+        exportedAs: exportSymbol.getName(),
+      },
+    };
+  }
+
+  return null;
+};

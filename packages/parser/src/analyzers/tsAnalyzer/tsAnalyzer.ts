@@ -2,29 +2,18 @@ import { Edge } from "@seergraph/shared";
 import type { SymbolFact } from "../types";
 import path from "node:path";
 
-// AST HELPERS
-import { getLocation, getSymbolId, getCallstack } from "./ast";
-
 // SYMBOL EXTRACTION FUNCTIONS
-import {
-  extractFunctionDeclaration,
-  extractVariableDeclaration,
-  extractClassDeclaration,
-  extractObjectLiteral,
-} from "./extractors/symbols";
+import { extractFunctionDeclaration, extractVariableDeclaration, extractClassDeclaration } from "./extractors/symbols";
 
+// EXPORT EXTRACTION FUNCTIONS
 import {
-  ClassDeclaration,
-  Diagnostic,
-  Node,
-  Project,
-  PropertyAssignment,
-  SourceFile,
-  Symbol,
-  ts,
-  VariableDeclaration,
-} from "ts-morph";
-import { randomUUID } from "node:crypto";
+  extractExportsFromVariableDecl,
+  extractExportsFromInlineDecl,
+  extractExportsFromExportSpecifier,
+  extractExportsFromExportAssignment,
+} from "./extractors/exports";
+
+import { Diagnostic, Node, Project, SourceFile, ts } from "ts-morph";
 
 const extractSymbolsFromNode = (node: Node, relativePath: string) => {
   const symbols: SymbolFact[] = [];
@@ -52,142 +41,6 @@ const extractSymbolsFromSourceFile = (sourceFile: SourceFile, relativePath: stri
   return symbols;
 };
 
-const extractExportsFromVariableDecl = (
-  node: VariableDeclaration,
-  exportSymbol: Symbol,
-  relativePath: string,
-): Edge | null => {
-  // Get the initializer of the exported variable declaration
-  const initializer = node.getInitializer();
-
-  // Only process the following types of variables, and not string/numeric literals
-  if (
-    Node.isArrowFunction(initializer) ||
-    Node.isFunctionExpression(initializer) ||
-    Node.isObjectLiteralExpression(initializer)
-  ) {
-    return {
-      id: randomUUID(),
-      from: relativePath,
-      to: `${relativePath}#${exportSymbol.getName()}`,
-      type: "exports",
-      meta: {
-        exportedAs: exportSymbol.getName(),
-        isDefault: (exportSymbol.getValueDeclaration() as VariableDeclaration).isDefaultExport(),
-      },
-    };
-  }
-
-  if (Node.isPropertyAccessExpression(initializer)) {
-    const propertyAssignment = initializer.getSymbol()?.getDeclarations()[0] as PropertyAssignment;
-    const callstack = getCallstack(propertyAssignment, relativePath);
-    const { id } = getSymbolId([
-      { name: propertyAssignment.getName(), kind: propertyAssignment.getKindName() },
-      ...callstack,
-    ]);
-
-    return {
-      id: randomUUID(),
-      from: relativePath,
-      to: id,
-      type: "exports",
-      meta: {
-        exportedAs: exportSymbol.getName(),
-      },
-    };
-  }
-
-  return null;
-};
-
-const extractExportsFromInlineDeclaration = (
-  exportSymbol: Symbol,
-  relativePath: string,
-  isDefExp: boolean = false,
-): Edge => {
-  const name = isDefExp ? "default" : exportSymbol.getName();
-  return {
-    id: randomUUID(),
-    from: relativePath,
-    to: `${relativePath}#${name}`,
-    type: "exports",
-    meta: {
-      exportedAs: name,
-      isDefault: isDefExp || (exportSymbol.getValueDeclaration() as ClassDeclaration)?.isDefaultExport(),
-    },
-  };
-};
-
-const extractExportsFromExportSpecifier = (exportSymbol: Symbol, relativePath: string): Edge | null => {
-  const origSymbol = exportSymbol.getAliasedSymbol();
-  if (!origSymbol) return null;
-
-  const aliasName = exportSymbol.getName() === origSymbol.getName() ? undefined : exportSymbol.getName();
-  return {
-    id: randomUUID(),
-    from: relativePath,
-    to: `${relativePath}#${origSymbol.getName()}`,
-    type: "exports",
-    meta: {
-      exportedAs: origSymbol.getName(),
-      aliasName,
-    },
-  };
-};
-
-const extractExportsFromExportAssignment = (
-  exportSymbol: Symbol,
-  relativePath: string,
-): { edge: Edge; symbols: SymbolFact[] } | null => {
-  const exportAssignment = exportSymbol.getDeclarations()[0];
-  const value = exportAssignment.getChildAtIndex(2);
-  const valueKind = value.getKindName();
-  const valueSymbol = value.getSymbol();
-
-  let edge: Edge;
-  let symbols: SymbolFact[] = [];
-
-  if (!valueSymbol) return null;
-
-  if (Node.isArrowFunction(value) || Node.isObjectLiteralExpression(value)) {
-    edge = extractExportsFromInlineDeclaration(valueSymbol, relativePath, true);
-    edge.meta!.isDefault = true;
-    console.log(edge);
-
-    if (Node.isObjectLiteralExpression(value)) {
-      symbols = [...extractObjectLiteral(value, "default", relativePath, true)];
-    } else {
-      symbols.push({
-        id: `${relativePath}#default`,
-        parentId: relativePath,
-        name: "default",
-        kind: "function",
-        location: getLocation(value, relativePath),
-      });
-    }
-
-    return { edge, symbols };
-  }
-
-  if (Node.isIdentifier(value)) {
-    edge = {
-      id: randomUUID(),
-      from: relativePath,
-      to: `${relativePath}#${valueSymbol.getName()}`,
-      type: "exports",
-      meta: {
-        exportedAs: valueSymbol.getName(),
-        isDefault: true,
-      },
-    };
-
-    return { edge, symbols };
-  }
-
-  console.log(valueKind, valueSymbol?.getName());
-  return null;
-};
-
 const extractExportsFromSourceFile = (sourceFile: SourceFile, symbols: SymbolFact[], relativePath: string) => {
   const expSyms = sourceFile.getExportSymbols();
   const edges: Edge[] = [];
@@ -201,7 +54,7 @@ const extractExportsFromSourceFile = (sourceFile: SourceFile, symbols: SymbolFac
     }
 
     if (Node.isFunctionDeclaration(decl) || Node.isClassDeclaration(decl)) {
-      const edge = extractExportsFromInlineDeclaration(s, relativePath);
+      const edge = extractExportsFromInlineDecl(s, relativePath);
       if (edge) edges.push(edge);
     }
 
