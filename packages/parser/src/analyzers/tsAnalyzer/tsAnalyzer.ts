@@ -1,81 +1,11 @@
+import path from "node:path";
+import { Diagnostic, Project, ts } from "ts-morph";
+
 import { Edge } from "@seergraph/shared";
 import type { SymbolFact } from "../types";
-import path from "node:path";
 
-// SYMBOL EXTRACTION FUNCTIONS
-import { extractFunctionDeclaration, extractVariableDeclaration, extractClassDeclaration } from "./extractors/symbols";
-
-// EXPORT EXTRACTION FUNCTIONS
-import {
-  extractExportsFromVariableDecl,
-  extractExportsFromInlineDecl,
-  extractExportsFromExportSpecifier,
-  extractExportsFromExportAssignment,
-} from "./extractors/exports";
-
-import { Diagnostic, Node, Project, SourceFile, ts } from "ts-morph";
-
-const extractSymbolsFromNode = (node: Node, relativePath: string) => {
-  const symbols: SymbolFact[] = [];
-
-  if (Node.isFunctionDeclaration(node)) {
-    symbols.push(...extractFunctionDeclaration(node, relativePath));
-  } else if (Node.isVariableDeclaration(node)) {
-    symbols.push(...extractVariableDeclaration(node, relativePath));
-  } else if (Node.isClassDeclaration(node)) {
-    symbols.push(...extractClassDeclaration(node, relativePath));
-  }
-
-  return symbols;
-};
-
-const extractSymbolsFromSourceFile = (sourceFile: SourceFile, relativePath: string) => {
-  const symbols: SymbolFact[] = [];
-
-  sourceFile.forEachDescendant((node) => {
-    console.log(node.getKindName());
-    symbols.push(...extractSymbolsFromNode(node, relativePath));
-  });
-
-  console.log(symbols.filter((s) => s.kind));
-  return symbols;
-};
-
-const extractExportsFromSourceFile = (sourceFile: SourceFile, symbols: SymbolFact[], relativePath: string) => {
-  const expSyms = sourceFile.getExportSymbols();
-  const edges: Edge[] = [];
-
-  for (const s of expSyms) {
-    const decl = s.getDeclarations()[0];
-    console.log(decl.getKindName());
-    if (Node.isVariableDeclaration(decl)) {
-      const edge = extractExportsFromVariableDecl(decl, s, relativePath);
-      if (edge) edges.push(edge);
-    }
-
-    if (Node.isFunctionDeclaration(decl) || Node.isClassDeclaration(decl)) {
-      const edge = extractExportsFromInlineDecl(s, relativePath);
-      if (edge) edges.push(edge);
-    }
-
-    if (Node.isExportSpecifier(decl)) {
-      const edge = extractExportsFromExportSpecifier(s, relativePath);
-      if (edge) edges.push(edge);
-    }
-
-    if (Node.isExportAssignment(decl)) {
-      const res = extractExportsFromExportAssignment(s, relativePath);
-      if (res) {
-        const { edge, symbols: syms } = res;
-        console.log(syms);
-        symbols.push(...syms);
-        if (edge) edges.push(edge);
-      }
-    }
-  }
-
-  return edges;
-};
+import { extractExportsFromSourceFile } from "./sourceFile/extractExports";
+import { extractSymbolsFromSourceFile } from "./sourceFile/extractSymbols";
 
 type AnalyzerArgs =
   | [root: string, input: string[]] // Input is filepaths
