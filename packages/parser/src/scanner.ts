@@ -35,6 +35,9 @@ export const scanRepo = async (rootPath: string) => {
 
       const filePath = path.join(dir.parentPath, dir.name);
 
+      // TEMPORARILY ignore test files (should be a togglable option)
+      if (dir.name.includes(".test.")) continue;
+
       const isIgnore = dir.name.includes(".gitignore");
       if (isIgnore) {
         const gitIgnoreContent = (await fs.readFile(filePath)).toString();
