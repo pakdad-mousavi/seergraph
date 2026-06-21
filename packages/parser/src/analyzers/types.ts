@@ -12,7 +12,7 @@ export interface ImportFact {
   moduleSpecifier: string;
   namedImports: {
     imported: string;
-    local: string;
+    local: string | undefined;
   }[];
   defaultImport?: string;
   namespaceImport?: string;

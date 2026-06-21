@@ -2,10 +2,11 @@ import path from "node:path";
 import { Diagnostic, Project, ts } from "ts-morph";
 
 import { Edge } from "@seergraph/shared";
-import type { SymbolFact } from "../types";
+import type { ImportFact, SymbolFact } from "../types";
 
 import { extractExportsFromSourceFile } from "./sourceFile/extractExports";
 import { extractSymbolsFromSourceFile } from "./sourceFile/extractSymbols";
+import { extractImportsFromSourceFile } from "./sourceFile/extractImports";
 
 type AnalyzerArgs =
   | [root: string, input: string[]] // Input is filepaths
@@ -13,8 +14,8 @@ type AnalyzerArgs =
   | [root: string, input: string, testingMode: true]; // Input is source code
 
 type AnalyzerReturn =
-  | { error: true; symbols: null; exportEdges: null; diagnostics: Diagnostic[] }
-  | { error: false; symbols: SymbolFact[]; exportEdges: Edge[]; diagnostics: null };
+  | { error: true; symbols: null; imports: null; exportEdges: null; diagnostics: Diagnostic[] }
+  | { error: false; symbols: SymbolFact[]; imports: ImportFact[]; exportEdges: Edge[]; diagnostics: null };
 
 export const tsAnalyzer = (...args: AnalyzerArgs): AnalyzerReturn => {
   const [root, input, testingMode] = args;
@@ -30,12 +31,13 @@ export const tsAnalyzer = (...args: AnalyzerArgs): AnalyzerReturn => {
     // Check for errors
     const diagnostics = sourceFile.getPreEmitDiagnostics();
     const containsErrors = diagnostics.some((d) => d.getCategory() === ts.DiagnosticCategory.Error);
-    if (containsErrors) return { error: true, symbols: null, exportEdges: null, diagnostics };
+    if (containsErrors) return { error: true, symbols: null, imports: null, exportEdges: null, diagnostics };
 
     // Return data
     const symbols = extractSymbolsFromSourceFile(sourceFile, "dummy-file.ts");
+    const imports = extractImportsFromSourceFile(sourceFile, "dummy-file.ts");
     const exportEdges = extractExportsFromSourceFile(sourceFile, symbols, "dummy-file.ts");
-    return { error: false, symbols, exportEdges, diagnostics: null };
+    return { error: false, symbols, imports, exportEdges, diagnostics: null };
   }
   // Otherwise take in filepaths
   else {
@@ -48,11 +50,12 @@ export const tsAnalyzer = (...args: AnalyzerArgs): AnalyzerReturn => {
     // Check for errors
     const diagnostics = sourceFile.getPreEmitDiagnostics();
     const containsErrors = diagnostics.some((d) => d.getCategory() === ts.DiagnosticCategory.Error);
-    if (containsErrors) return { error: true, symbols: null, exportEdges: null, diagnostics };
+    if (containsErrors) return { error: true, symbols: null, imports: null, exportEdges: null, diagnostics };
 
     // Return data
     const symbols = extractSymbolsFromSourceFile(sourceFile, dummyRelativePath);
+    const imports = extractImportsFromSourceFile(sourceFile, dummyRelativePath);
     const exportEdges = extractExportsFromSourceFile(sourceFile, symbols, dummyRelativePath);
-    return { error: false, symbols, exportEdges, diagnostics: null };
+    return { error: false, symbols, imports, exportEdges, diagnostics: null };
   }
 };
