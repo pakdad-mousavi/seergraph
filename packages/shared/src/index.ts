@@ -63,8 +63,8 @@ export interface Edge {
 
   // optional metadata
   meta?: {
+    exportedAs: string;
     aliasName?: string;
-    exportedAs?: string;
     isDefault?: boolean;
     importName?: string;
   };

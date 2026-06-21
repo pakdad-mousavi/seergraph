@@ -26,7 +26,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     console.log(helloWorld);
     `;
 
-    const { error, symbols, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, symbols, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(true);
     expect(symbols).toBe(null);
@@ -47,7 +47,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     console.log(x, y, z);
     `;
 
-    const { error, symbols, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, symbols, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -65,7 +65,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     };
     `;
 
-    const { error, symbols, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, symbols, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -97,7 +97,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     };
     `;
 
-    const { error, symbols, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, symbols, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -123,7 +123,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     class NamedClass {}
     `;
 
-    const { error, symbols, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, symbols, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -153,7 +153,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     }
     `;
 
-    const { error, symbols, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, symbols, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -211,7 +211,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     }
     `;
 
-    const { error, symbols, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, symbols, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -267,7 +267,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     }
     `;
 
-    const { error, symbols, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, symbols, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -323,7 +323,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     }
     `;
 
-    const { error, symbols, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, symbols, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -409,7 +409,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     }
     `;
 
-    const { error, symbols, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, symbols, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -577,7 +577,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     class MyCls {}
     `;
 
-    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -592,7 +592,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export const z = [() => {}, function () {}, {}, 123, 'string'];
     `;
 
-    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -605,7 +605,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export const x = function () {};
     `;
 
-    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -629,7 +629,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export const x = function add() {};
     `;
 
-    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -653,7 +653,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export const x = () => {};
     `;
 
-    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -677,7 +677,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export const x = () => {};
     `;
 
-    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -701,7 +701,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export class x {};
     `;
 
-    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -727,7 +727,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     };
     `;
 
-    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -755,7 +755,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export { x, y, z as j, i };
     `;
 
-    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -809,7 +809,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default function () {};
     `;
 
-    const { error, symbols, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, symbols, exportEdges, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -849,7 +849,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default function add() {};
     `;
 
-    const { error, symbols, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, symbols, exportEdges, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -891,7 +891,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default add;
     `;
 
-    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -917,7 +917,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default add;
     `;
 
-    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -943,7 +943,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default add;
     `;
 
-    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -967,7 +967,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default () => {};
     `;
 
-    const { error, symbols, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, symbols, exportEdges, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -1011,7 +1011,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default api;
     `;
 
-    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -1037,7 +1037,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     };
     `;
 
-    const { error, symbols, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, symbols, exportEdges, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -1091,7 +1091,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default MyCls;
     `;
 
-    const { error, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, exportEdges, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -1117,7 +1117,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     };
     `;
 
-    const { error, symbols, exportEdges, diagnostics } = tsAnalyzer("./", code, true);
+    const { error, symbols, exportEdges, diagnostics } = tsAnalyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
