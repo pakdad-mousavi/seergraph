@@ -1,6 +1,15 @@
-import { describe, expect, test } from "vitest";
-import { tsAnalyzer } from "../../analyzers/tsAnalyzer/tsAnalyzer";
+import { describe, expect, test, vi, beforeEach } from "vitest";
 import { ts } from "ts-morph";
+
+import { fs as memFs, vol } from "memfs";
+import { tsAnalyzer } from "../../analyzers/tsAnalyzer/tsAnalyzer";
+
+vi.mock("node:fs", () => memFs);
+vi.mock("node:fs/promises", () => memFs.promises);
+
+beforeEach(() => {
+  vi.resetModules();
+});
 
 describe("Typescript analyzer correctly extracts all symbols from a file", () => {
   test("Returns diagnostics for code with errors", () => {
