@@ -16,6 +16,5 @@ export const extractImportsFromSourceFile = (sourceFile: SourceFile, relativePat
     };
   });
 
-  console.log(importFacts);
   return importFacts;
 };
