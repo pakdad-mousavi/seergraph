@@ -17,7 +17,7 @@ type AnalyzerReturn =
   | { error: true; symbols: null; imports: null; exportEdges: null; diagnostics: Diagnostic[] }
   | { error: false; symbols: SymbolFact[]; imports: ImportFact[]; exportEdges: Edge[]; diagnostics: null };
 
-export const tsAnalyzer = (...args: AnalyzerArgs): AnalyzerReturn => {
+export const analyzer = (...args: AnalyzerArgs): AnalyzerReturn => {
   const [root, useTsConfig, input, testingMode] = args;
   // const absPath = path.resolve(this.root, filePath);
 

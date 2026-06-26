@@ -1,7 +1,7 @@
 import type { ProjectGraph, SymbolNode, FileNode, Edge, LanguageExtension } from "@seergraph/shared";
 
 import { scanRepo } from "./scanner";
-import { tsAnalyzer } from "./analyzers/tsAnalyzer/tsAnalyzer";
+import { analyzer } from "./analyzer/analyzer";
 
 // interface AstParser {
 //   (filePath: string): Promise<ProjectGraph | void>; // TODO: REMOVE VOID
@@ -21,7 +21,7 @@ export class Parser {
   public async parseProject(): Promise<void> {
     try {
       const filePaths = await scanRepo(this.root);
-      tsAnalyzer(this.root, this.useTsconfig, filePaths);
+      analyzer(this.root, this.useTsconfig, filePaths);
 
       // const parse = this.parsers[".ts"];
       // await parse(filePath);
