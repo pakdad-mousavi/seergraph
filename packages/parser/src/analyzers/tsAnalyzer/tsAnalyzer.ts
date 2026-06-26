@@ -1,5 +1,5 @@
 import path from "node:path";
-import { Diagnostic, Project, ProjectOptions, ts } from "ts-morph";
+import { Diagnostic, Project, ts } from "ts-morph";
 
 import { Edge } from "@seergraph/shared";
 import type { ImportFact, SymbolFact } from "../types";
@@ -7,9 +7,7 @@ import type { ImportFact, SymbolFact } from "../types";
 import { extractExportsFromSourceFile } from "./sourceFile/extractExports";
 import { extractSymbolsFromSourceFile } from "./sourceFile/extractSymbols";
 import { extractImportsFromSourceFile } from "./sourceFile/extractImports";
-import { buildExportIndex } from "./linker/buildExportIndex";
-import { writeFileSync } from "node:fs";
-import { randomUUID } from "node:crypto";
+import { resolveImports } from "./sourceFile/resolveImports";
 
 type AnalyzerArgs =
   | [root: string, useTsConfig: boolean, input: string[], testingMode?: false] // Input is filepaths
@@ -83,117 +81,7 @@ export const tsAnalyzer = (...args: AnalyzerArgs): AnalyzerReturn => {
       allImports.push(...imports);
     }
 
-    const expIndex = buildExportIndex(projectExportEdges);
-    console.log(expIndex);
-
-    const importEdges: Edge[] = [];
-    const aliasEdges: Edge[] = [];
-
-    for (const [importPath, importFacts] of Object.entries(importsPerFile)) {
-      for (const importFact of importFacts) {
-        const exports = expIndex.get(importFact.moduleSpecifier);
-        if (!exports) continue;
-
-        for (const namedImport of importFact.namedImports) {
-          const expEdge = exports.get(namedImport.imported);
-          if (!expEdge?.from) continue;
-
-          importEdges.push({
-            id: randomUUID(),
-            from: importPath,
-            to: expEdge.to,
-            type: "imports",
-            meta: {
-              importName: namedImport.local || namedImport.imported,
-            },
-          });
-
-          const id = `${importPath}#binding:${namedImport.local || namedImport.imported}`;
-          projectSymbols.push({
-            id,
-            name: namedImport.local || namedImport.imported,
-            kind: "binding",
-            location: importFact.location,
-            parentId: importPath,
-          });
-
-          aliasEdges.push({
-            id: randomUUID(),
-            from: id,
-            to: expEdge.to,
-            type: "aliases",
-          });
-        }
-
-        if (importFact.defaultImport) {
-          const expEdge = exports.get("default");
-          if (!expEdge?.from) continue;
-
-          importEdges.push({
-            id: randomUUID(),
-            from: importPath,
-            to: expEdge.to,
-            type: "imports",
-            meta: {
-              importName: importFact.defaultImport,
-            },
-          });
-
-          const id = `${importPath}#binding:${importFact.defaultImport}`;
-          projectSymbols.push({
-            id,
-            name: importFact.defaultImport,
-            kind: "binding",
-            location: importFact.location,
-            parentId: importPath,
-          });
-
-          aliasEdges.push({
-            id: randomUUID(),
-            from: id,
-            to: expEdge.to,
-            type: "aliases",
-          });
-        }
-
-        if (importFact.namespaceImport) {
-          importEdges.push({
-            id: randomUUID(),
-            from: importPath,
-            to: importFact.moduleSpecifier,
-            type: "imports",
-            meta: {
-              importName: importFact.namespaceImport,
-            },
-          });
-
-          const id = `${importPath}#binding:${importFact.namespaceImport}`;
-          projectSymbols.push({
-            id,
-            name: importFact.namespaceImport,
-            kind: "binding",
-            location: importFact.location,
-            parentId: importPath,
-          });
-
-          aliasEdges.push({
-            id: randomUUID(),
-            from: id,
-            to: importFact.moduleSpecifier,
-            type: "aliases",
-            meta: {
-              isNamespace: true,
-            },
-          });
-        }
-      }
-    }
-
-    writeFileSync("./symbols.json", JSON.stringify(projectSymbols));
-    writeFileSync("./imports.json", JSON.stringify(importsPerFile));
-    writeFileSync("./exports.json", JSON.stringify(projectExportEdges));
-    writeFileSync("./importEdges.json", JSON.stringify(importEdges));
-    writeFileSync("./aliasEdges.json", JSON.stringify(aliasEdges));
+    const { aliasEdges, importEdges, symbols } = resolveImports(projectExportEdges, importsPerFile);
 
     return { error: false, symbols: projectSymbols, imports: [], exportEdges: projectExportEdges, diagnostics: null };
   }
