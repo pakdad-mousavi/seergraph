@@ -16,6 +16,7 @@ export interface ImportFact {
   }[];
   defaultImport?: string;
   namespaceImport?: string;
+  location: Location;
 }
 
 export interface CallFact {

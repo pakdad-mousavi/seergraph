@@ -11,13 +11,21 @@ export type Language = "typescript" | "javascript" | "python" | "go" | "rust" | 
 /**
   The type of the symbol, ex: `function`, `class`, etc.
 */
-export type SymbolKind = "function" | "method" | "class" | "interface" | "enum" | "type" | "object";
+export type SymbolKind = "function" | "method" | "class" | "interface" | "enum" | "type" | "object" | "binding";
 // | "property"
 
 /**
   The type of the edge connecting any two nodes.
 */
-export type EdgeType = "imports" | "calls" | "references" | "inherits" | "implements" | "contains" | "exports";
+export type EdgeType =
+  | "imports"
+  | "calls"
+  | "references"
+  | "inherits"
+  | "implements"
+  | "contains"
+  | "exports"
+  | "aliases";
 
 /**
   Defines the location of a specific symbol inside of a file.
@@ -63,10 +71,11 @@ export interface Edge {
 
   // optional metadata
   meta?: {
-    exportedAs: string;
+    exportedAs?: string;
     aliasName?: string;
     isDefault?: boolean;
     importName?: string;
+    isNamespace?: boolean;
   };
 }
 
