@@ -1,4 +1,4 @@
-import { FileId, Location, SymbolId, SymbolKind } from "@seergraph/shared";
+import { FileId, SymbolId } from "@seergraph/shared";
 import { BindingFact, SymbolFact } from "../types";
 
 export class SymbolStore {
@@ -46,13 +46,7 @@ export class SymbolStore {
   // ----------------
   // Symbol Creation
   // ----------------
-  public createSymbol(symbol: {
-    id: SymbolId;
-    name: string;
-    parentId: SymbolId;
-    kind: SymbolKind;
-    location: Location;
-  }) {
+  public createSymbol(symbol: SymbolFact) {
     if (symbol.kind === "binding") {
       this.bindingSymbols.push(symbol as BindingFact);
       this.indexBindingSymbol(symbol);
