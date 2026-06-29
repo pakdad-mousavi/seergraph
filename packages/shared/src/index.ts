@@ -1,12 +1,14 @@
-/**
-  The extensions for the language being used in a file, ex: `.ts`, `.js`, etc.
-*/
-export type LanguageExtension = ".ts" | ".js" | ".py";
+import { AliasEdge, ExportEdge, ImportEdge } from "./edges";
 
 /**
-  The language being used in a file, ex: `typescript`, `javascript`, etc.
+  The id of a file.
 */
-export type Language = "typescript" | "javascript" | "python" | "go" | "rust" | "java";
+export type FileId = string & { readonly __brand: "FileId" };
+
+/**
+  The id of a symbol.
+*/
+export type SymbolId = string & { readonly __brand: "SymbolId" };
 
 /**
   The type of the symbol, ex: `function`, `class`, etc.
@@ -31,7 +33,7 @@ export type EdgeType =
   Defines the location of a specific symbol inside of a file.
 */
 export interface Location {
-  fileId: string;
+  fileId: FileId;
 
   startLine: number;
   startChar: number;
@@ -44,9 +46,8 @@ export interface Location {
   A node representing a file.
 */
 export interface FileNode {
-  id: string;
-  path: string;
-  language: Language;
+  id: FileId;
+  name: string;
 }
 
 /**
@@ -63,21 +64,7 @@ export interface SymbolNode {
 /**
   The edge connecting any two nodes.
 */
-export interface Edge {
-  id: string;
-  from: string;
-  to: string;
-  type: EdgeType;
-
-  // optional metadata
-  meta?: {
-    exportedAs?: string;
-    aliasName?: string;
-    isDefault?: boolean;
-    importName?: string;
-    isNamespace?: boolean;
-  };
-}
+export type Edge = AliasEdge | ExportEdge | ImportEdge;
 
 /**
   The entire graph of a project. Maps are key-value pairs that link a record's `id` to the entire record itself.
@@ -87,3 +74,6 @@ export interface ProjectGraph {
   symbols: Map<string, SymbolNode>;
   edges: Edge[];
 }
+
+// Export utilities
+export * from "./utils";

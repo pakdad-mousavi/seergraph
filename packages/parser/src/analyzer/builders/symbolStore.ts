@@ -1,5 +1,5 @@
-import { FileId, SymbolId } from "@seergraph/shared";
-import { BindingFact, SymbolFact } from "../types";
+import { FileId, FileNode, SymbolId } from "@seergraph/shared";
+import { BindingFact, SymbolFact } from "../../types";
 
 export class SymbolStore {
   // -------------
@@ -11,6 +11,7 @@ export class SymbolStore {
   // --------
   // INDEXES
   // --------
+  private fileById: Map<FileId, FileNode> = new Map();
   private symbolById: Map<SymbolId, SymbolFact> = new Map();
   private symbolsByFile: Map<FileId, SymbolId[]> = new Map();
   private bindingsByFileAndName: Map<FileId, Map<string, SymbolId>> = new Map();
@@ -55,6 +56,10 @@ export class SymbolStore {
     }
     this.indexSymbolById(symbol);
     this.indexSymbolByFile(symbol);
+  }
+
+  public createFile(fileNode: FileNode) {
+    this.fileById.set(fileNode.id, fileNode);
   }
 
   // -----------------
