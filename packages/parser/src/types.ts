@@ -5,7 +5,7 @@ export interface SymbolFact {
   name: string;
   kind: SymbolKind;
   location: Location;
-  parentId: string | null;
+  parentId: SymbolId | FileId;
 }
 
 export interface BindingFact extends SymbolFact {

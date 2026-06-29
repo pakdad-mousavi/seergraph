@@ -32,7 +32,7 @@ export const resolveImports = (importsPerFile: Record<string, ImportFact[]>, gra
             name: namedImport.local || namedImport.imported,
             kind: "binding",
             location: importFact.location,
-            parentId: importPath,
+            parentId: toFileId(importPath),
           },
           expEdge.to,
         );
@@ -58,7 +58,7 @@ export const resolveImports = (importsPerFile: Record<string, ImportFact[]>, gra
             name: importFact.defaultImport,
             kind: "binding",
             location: importFact.location,
-            parentId: importPath,
+            parentId: toFileId(importPath),
           },
           expEdge.to,
         );
@@ -82,7 +82,7 @@ export const resolveImports = (importsPerFile: Record<string, ImportFact[]>, gra
             name: importFact.namespaceImport,
             kind: "binding",
             location: importFact.location,
-            parentId: importPath,
+            parentId: toFileId(importPath),
           },
           toFileId(importFact.moduleSpecifier),
         );
