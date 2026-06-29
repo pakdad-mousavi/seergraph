@@ -40,9 +40,9 @@ export const extractExportsFromSourceFile = (
     if (Node.isExportAssignment(decl)) {
       const extractionRes = extractExportsFromExportAssignment(s, relativePath);
       if (extractionRes) {
-        const { edge, symbols } = extractionRes;
+        const { edge, symbols: syms } = extractionRes;
         edges.push(edge);
-        symbols.push(...symbols);
+        symbols.push(...syms);
       }
     }
   }

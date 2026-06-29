@@ -14,7 +14,6 @@ export const extractExportsFromExportAssignment = (
 ): { edge: Edge; symbols: SymbolFact[] } | null => {
   const exportAssignment = exportSymbol.getDeclarations()[0];
   const value = exportAssignment.getChildAtIndex(2);
-  const valueKind = value.getKindName();
   const valueSymbol = value.getSymbol();
 
   let edge: Edge;
