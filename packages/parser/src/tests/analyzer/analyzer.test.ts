@@ -26,10 +26,10 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     console.log(helloWorld);
     `;
 
-    const { error, symbols, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(true);
-    expect(symbols).toBe(null);
+    expect(graphBuilder).toBe(null);
     expect(diagnostics).not.toBe(null);
 
     const containsErrors = diagnostics?.some((d) => d.getCategory() === ts.DiagnosticCategory.Error);
@@ -47,10 +47,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     console.log(x, y, z);
     `;
 
-    const { error, symbols, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
+
+    const symbols = graphBuilder?.getSymbolsSnapshot();
     expect(symbols).toStrictEqual([]);
   });
 
@@ -65,10 +67,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     };
     `;
 
-    const { error, symbols, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
+
+    const symbols = graphBuilder?.getSymbolsSnapshot();
     expect(symbols).toStrictEqual([
       {
         id: "dummy-file.ts#square",
@@ -97,10 +101,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     };
     `;
 
-    const { error, symbols, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
+    const symbols = graphBuilder?.getSymbolsSnapshot();
     expect(symbols).toStrictEqual([
       {
         id: "dummy-file.ts#square",
@@ -123,10 +128,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     class NamedClass {}
     `;
 
-    const { error, symbols, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
+    const symbols = graphBuilder?.getSymbolsSnapshot();
     expect(symbols).toStrictEqual([
       {
         id: "dummy-file.ts#NamedClass",
@@ -153,11 +159,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     }
     `;
 
-    const { error, symbols, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
 
+    const symbols = graphBuilder?.getSymbolsSnapshot();
     const methodSymbols = symbols?.filter((s) => s.kind === "method");
     expect(methodSymbols).toStrictEqual([
       {
@@ -211,10 +218,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     }
     `;
 
-    const { error, symbols, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
+    const symbols = graphBuilder?.getSymbolsSnapshot();
     expect(symbols).toStrictEqual([
       {
         id: "dummy-file.ts#x",
@@ -267,10 +275,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     }
     `;
 
-    const { error, symbols, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
+    const symbols = graphBuilder?.getSymbolsSnapshot();
     expect(symbols).toStrictEqual([
       {
         id: "dummy-file.ts#x",
@@ -323,10 +332,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     }
     `;
 
-    const { error, symbols, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
+    const symbols = graphBuilder?.getSymbolsSnapshot();
     expect(symbols).toStrictEqual([
       {
         id: "dummy-file.ts#obj",
@@ -409,11 +419,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     }
     `;
 
-    const { error, symbols, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
 
+    const symbols = graphBuilder?.getSymbolsSnapshot();
     expect(symbols).toStrictEqual([
       {
         id: "dummy-file.ts#api",
@@ -577,11 +588,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     class MyCls {}
     `;
 
-    const { error, exportEdges, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
 
+    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
     expect(exportEdges).toStrictEqual([]);
   });
 
@@ -592,11 +604,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export const z = [() => {}, function () {}, {}, 123, 'string'];
     `;
 
-    const { error, exportEdges, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
 
+    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
     expect(exportEdges).toStrictEqual([]);
   });
 
@@ -605,11 +618,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export const x = function () {};
     `;
 
-    const { error, exportEdges, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
 
+    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
     expect(exportEdges).toStrictEqual([
       {
         from: "dummy-file.ts",
@@ -619,7 +633,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           isDefault: false,
         },
         to: "dummy-file.ts#x",
-        type: "exports",
+        kind: "exports",
       },
     ]);
   });
@@ -629,11 +643,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export const x = function add() {};
     `;
 
-    const { error, exportEdges, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
 
+    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
     expect(exportEdges).toStrictEqual([
       {
         from: "dummy-file.ts",
@@ -643,7 +658,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           isDefault: false,
         },
         to: "dummy-file.ts#x",
-        type: "exports",
+        kind: "exports",
       },
     ]);
   });
@@ -653,11 +668,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export const x = () => {};
     `;
 
-    const { error, exportEdges, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
 
+    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
     expect(exportEdges).toStrictEqual([
       {
         from: "dummy-file.ts",
@@ -667,7 +683,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           isDefault: false,
         },
         to: "dummy-file.ts#x",
-        type: "exports",
+        kind: "exports",
       },
     ]);
   });
@@ -677,11 +693,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export const x = () => {};
     `;
 
-    const { error, exportEdges, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
 
+    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
     expect(exportEdges).toStrictEqual([
       {
         from: "dummy-file.ts",
@@ -691,7 +708,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           isDefault: false,
         },
         to: "dummy-file.ts#x",
-        type: "exports",
+        kind: "exports",
       },
     ]);
   });
@@ -701,11 +718,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export class x {};
     `;
 
-    const { error, exportEdges, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
 
+    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
     expect(exportEdges).toStrictEqual([
       {
         from: "dummy-file.ts",
@@ -715,7 +733,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           isDefault: false,
         },
         to: "dummy-file.ts#x",
-        type: "exports",
+        kind: "exports",
       },
     ]);
   });
@@ -727,11 +745,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     };
     `;
 
-    const { error, exportEdges, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
 
+    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
     expect(exportEdges).toStrictEqual([
       {
         from: "dummy-file.ts",
@@ -741,7 +760,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           isDefault: false,
         },
         to: "dummy-file.ts#x",
-        type: "exports",
+        kind: "exports",
       },
     ]);
   });
@@ -755,11 +774,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export { x, y, z as j, i };
     `;
 
-    const { error, exportEdges, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
 
+    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
     expect(exportEdges).toStrictEqual([
       {
         from: "dummy-file.ts",
@@ -769,7 +789,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           exportedAs: "x",
         },
         to: "dummy-file.ts#x",
-        type: "exports",
+        kind: "exports",
       },
       {
         from: "dummy-file.ts",
@@ -779,7 +799,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           exportedAs: "y",
         },
         to: "dummy-file.ts#y",
-        type: "exports",
+        kind: "exports",
       },
       {
         from: "dummy-file.ts",
@@ -789,7 +809,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           exportedAs: "z",
         },
         to: "dummy-file.ts#z",
-        type: "exports",
+        kind: "exports",
       },
       {
         from: "dummy-file.ts",
@@ -799,7 +819,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           exportedAs: "i",
         },
         to: "dummy-file.ts#i",
-        type: "exports",
+        kind: "exports",
       },
     ]);
   });
@@ -809,11 +829,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default function () {};
     `;
 
-    const { error, symbols, exportEdges, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
 
+    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
     expect(exportEdges).toStrictEqual([
       {
         from: "dummy-file.ts",
@@ -823,10 +844,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           isDefault: true,
         },
         to: "dummy-file.ts#default",
-        type: "exports",
+        kind: "exports",
       },
     ]);
 
+    const symbols = graphBuilder?.getSymbolsSnapshot();
     expect(symbols).toStrictEqual([
       {
         id: "dummy-file.ts#default",
@@ -849,11 +871,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default function add() {};
     `;
 
-    const { error, symbols, exportEdges, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
 
+    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
     expect(exportEdges).toStrictEqual([
       {
         from: "dummy-file.ts",
@@ -863,9 +886,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           isDefault: true,
         },
         to: "dummy-file.ts#default",
-        type: "exports",
+        kind: "exports",
       },
     ]);
+
+    const symbols = graphBuilder?.getSymbolsSnapshot();
 
     expect(symbols).toStrictEqual([
       {
@@ -891,11 +916,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default add;
     `;
 
-    const { error, exportEdges, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
 
+    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
     expect(exportEdges).toStrictEqual([
       {
         from: "dummy-file.ts",
@@ -905,7 +931,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           isDefault: true,
         },
         to: "dummy-file.ts#add",
-        type: "exports",
+        kind: "exports",
       },
     ]);
   });
@@ -917,11 +943,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default add;
     `;
 
-    const { error, exportEdges, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
 
+    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
     expect(exportEdges).toStrictEqual([
       {
         from: "dummy-file.ts",
@@ -931,7 +958,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           isDefault: true,
         },
         to: "dummy-file.ts#add",
-        type: "exports",
+        kind: "exports",
       },
     ]);
   });
@@ -943,11 +970,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default add;
     `;
 
-    const { error, exportEdges, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
 
+    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
     expect(exportEdges).toStrictEqual([
       {
         from: "dummy-file.ts",
@@ -957,7 +985,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           isDefault: true,
         },
         to: "dummy-file.ts#add",
-        type: "exports",
+        kind: "exports",
       },
     ]);
   });
@@ -967,11 +995,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default () => {};
     `;
 
-    const { error, symbols, exportEdges, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
 
+    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
     expect(exportEdges).toStrictEqual([
       {
         from: "dummy-file.ts",
@@ -981,10 +1010,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           isDefault: true,
         },
         to: "dummy-file.ts#default",
-        type: "exports",
+        kind: "exports",
       },
     ]);
 
+    const symbols = graphBuilder?.getSymbolsSnapshot();
     expect(symbols).toStrictEqual([
       {
         id: "dummy-file.ts#default",
@@ -1011,11 +1041,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default api;
     `;
 
-    const { error, exportEdges, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
 
+    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
     expect(exportEdges).toStrictEqual([
       {
         from: "dummy-file.ts",
@@ -1025,7 +1056,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           isDefault: true,
         },
         to: "dummy-file.ts#api",
-        type: "exports",
+        kind: "exports",
       },
     ]);
   });
@@ -1037,11 +1068,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     };
     `;
 
-    const { error, symbols, exportEdges, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
 
+    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
     expect(exportEdges).toStrictEqual([
       {
         from: "dummy-file.ts",
@@ -1051,10 +1083,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           isDefault: true,
         },
         to: "dummy-file.ts#default",
-        type: "exports",
+        kind: "exports",
       },
     ]);
 
+    const symbols = graphBuilder?.getSymbolsSnapshot();
     expect(symbols).toStrictEqual([
       {
         id: "dummy-file.ts#default",
@@ -1091,11 +1124,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default MyCls;
     `;
 
-    const { error, exportEdges, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
 
+    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
     expect(exportEdges).toStrictEqual([
       {
         from: "dummy-file.ts",
@@ -1105,7 +1139,7 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           isDefault: true,
         },
         to: "dummy-file.ts#MyCls",
-        type: "exports",
+        kind: "exports",
       },
     ]);
   });
@@ -1117,11 +1151,12 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     };
     `;
 
-    const { error, symbols, exportEdges, diagnostics } = analyzer("./", false, code, true);
+    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
 
+    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
     expect(exportEdges).toStrictEqual([
       {
         from: "dummy-file.ts",
@@ -1131,10 +1166,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
           isDefault: true,
         },
         to: "dummy-file.ts#default",
-        type: "exports",
+        kind: "exports",
       },
     ]);
 
+    const symbols = graphBuilder?.getSymbolsSnapshot();
     expect(symbols).toStrictEqual([
       {
         id: "dummy-file.ts#default",
