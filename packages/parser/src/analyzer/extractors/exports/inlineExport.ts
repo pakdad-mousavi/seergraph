@@ -1,4 +1,4 @@
-import { Edge } from "@seergraph/shared";
+import { Edge, toFileId, toSymbolId } from "@seergraph/shared";
 import { randomUUID } from "node:crypto";
 import { ClassDeclaration, Symbol } from "ts-morph";
 
@@ -10,9 +10,9 @@ export const extractExportsFromInlineDecl = (
   const name = isDefExp ? "default" : exportSymbol.getName();
   return {
     id: randomUUID(),
-    from: relativePath,
-    to: `${relativePath}#${name}`,
-    type: "exports",
+    from: toFileId(relativePath),
+    to: toSymbolId(`${relativePath}#${name}`),
+    kind: "exports",
     meta: {
       exportedAs: name,
       isDefault: isDefExp || (exportSymbol.getValueDeclaration() as ClassDeclaration)?.isDefaultExport(),

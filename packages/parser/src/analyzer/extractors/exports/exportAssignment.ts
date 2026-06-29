@@ -1,4 +1,4 @@
-import { Edge } from "@seergraph/shared";
+import { toSymbolId, Edge, toFileId } from "@seergraph/shared";
 import { SymbolFact } from "../../../types";
 import { Node, Symbol } from "ts-morph";
 
@@ -25,13 +25,12 @@ export const extractExportsFromExportAssignment = (
   if (Node.isArrowFunction(value) || Node.isObjectLiteralExpression(value)) {
     edge = extractExportsFromInlineDecl(valueSymbol, relativePath, true);
     edge.meta!.isDefault = true;
-    console.log(edge);
 
     if (Node.isObjectLiteralExpression(value)) {
       symbols = [...extractObjectLiteral(value, "default", relativePath, true)];
     } else {
       symbols.push({
-        id: `${relativePath}#default`,
+        id: toSymbolId(`${relativePath}#default`),
         parentId: relativePath,
         name: "default",
         kind: "function",
@@ -45,9 +44,9 @@ export const extractExportsFromExportAssignment = (
   if (Node.isIdentifier(value)) {
     edge = {
       id: randomUUID(),
-      from: relativePath,
-      to: `${relativePath}#${valueSymbol.getName()}`,
-      type: "exports",
+      from: toFileId(relativePath),
+      to: toSymbolId(`${relativePath}#${valueSymbol.getName()}`),
+      kind: "exports",
       meta: {
         exportedAs: valueSymbol.getName(),
         isDefault: true,
@@ -57,6 +56,5 @@ export const extractExportsFromExportAssignment = (
     return { edge, symbols };
   }
 
-  console.log(valueKind, valueSymbol?.getName());
   return null;
 };

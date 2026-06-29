@@ -1,4 +1,4 @@
-import { Edge } from "@seergraph/shared";
+import { Edge, toFileId, toSymbolId } from "@seergraph/shared";
 import { randomUUID } from "node:crypto";
 import { Node, PropertyAssignment, Symbol, VariableDeclaration } from "ts-morph";
 import { getCallstack, getSymbolId } from "../../ast";
@@ -19,9 +19,9 @@ export const extractExportsFromVariableDecl = (
   ) {
     return {
       id: randomUUID(),
-      from: relativePath,
-      to: `${relativePath}#${exportSymbol.getName()}`,
-      type: "exports",
+      from: toFileId(relativePath),
+      to: toSymbolId(`${relativePath}#${exportSymbol.getName()}`),
+      kind: "exports",
       meta: {
         exportedAs: exportSymbol.getName(),
         isDefault: (exportSymbol.getValueDeclaration() as VariableDeclaration).isDefaultExport(),
@@ -39,9 +39,9 @@ export const extractExportsFromVariableDecl = (
 
     return {
       id: randomUUID(),
-      from: relativePath,
-      to: id,
-      type: "exports",
+      from: toFileId(relativePath),
+      to: toSymbolId(id),
+      kind: "exports",
       meta: {
         exportedAs: exportSymbol.getName(),
       },

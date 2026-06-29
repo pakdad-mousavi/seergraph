@@ -1,21 +1,21 @@
 import path from "node:path";
 import { Diagnostic, Project, ts } from "ts-morph";
 
-import { Edge } from "@seergraph/shared";
 import type { ImportFact, SymbolFact } from "../types";
 
 import { extractExportsFromSourceFile } from "./sourceFile/extractExports";
 import { extractSymbolsFromSourceFile } from "./sourceFile/extractSymbols";
 import { extractImportsFromSourceFile } from "./sourceFile/extractImports";
 import { resolveImports } from "./sourceFile/resolveImports";
+import { GraphBuilder } from "./builders/graphBuilder";
 
 type AnalyzerArgs =
   | [root: string, useTsConfig: boolean, input: string[], testingMode?: false] // Input is filepaths
   | [root: string, useTsConfig: boolean, input: string, testingMode: true]; // Input is source code
 
 type AnalyzerReturn =
-  | { error: true; symbols: null; imports: null; exportEdges: null; diagnostics: Diagnostic[] }
-  | { error: false; symbols: SymbolFact[]; imports: ImportFact[]; exportEdges: Edge[]; diagnostics: null };
+  | { error: true; graphBuilder: null; diagnostics: Diagnostic[] }
+  | { error: false; graphBuilder: GraphBuilder; diagnostics: null };
 
 export const analyzer = (...args: AnalyzerArgs): AnalyzerReturn => {
   const [root, useTsConfig, input, testingMode] = args;
@@ -28,6 +28,8 @@ export const analyzer = (...args: AnalyzerArgs): AnalyzerReturn => {
       })
     : new Project();
 
+  const graphBuilder = GraphBuilder.createDefault();
+
   // Testing mode takes in source code
   if (testingMode) {
     // Parse input
@@ -38,20 +40,18 @@ export const analyzer = (...args: AnalyzerArgs): AnalyzerReturn => {
     // Check for errors
     const diagnostics = sourceFile.getPreEmitDiagnostics();
     const containsErrors = diagnostics.some((d) => d.getCategory() === ts.DiagnosticCategory.Error);
-    if (containsErrors) return { error: true, symbols: null, imports: null, exportEdges: null, diagnostics };
+    if (containsErrors) return { error: true, graphBuilder: null, diagnostics };
 
     // Return data
-    const symbols = extractSymbolsFromSourceFile(sourceFile, dummyPath);
-    const imports = extractImportsFromSourceFile(sourceFile, "./");
-    const exportEdges = extractExportsFromSourceFile(sourceFile, symbols, dummyPath);
-    return { error: false, symbols, imports, exportEdges, diagnostics: null };
+    extractSymbolsFromSourceFile(sourceFile, dummyPath, graphBuilder);
+    extractImportsFromSourceFile(sourceFile, "./");
+    extractExportsFromSourceFile(sourceFile, dummyPath, graphBuilder);
+    return { error: false, graphBuilder, diagnostics: null };
   }
   // Otherwise take in filepaths
   else {
     const projectSymbols: SymbolFact[] = [];
-    const projectExportEdges = [];
     const importsPerFile: Record<string, ImportFact[]> = {};
-    const allImports = [];
 
     // Parse input
     for (const filepath of input) {
@@ -65,24 +65,22 @@ export const analyzer = (...args: AnalyzerArgs): AnalyzerReturn => {
       const diagnostics = sourceFile.getPreEmitDiagnostics();
       const containsErrors = diagnostics.some((d) => d.getCategory() === ts.DiagnosticCategory.Error);
       console.log(diagnostics.map((d) => d.getMessageText() + " " + d.getSourceFile()?.getFilePath()));
-      if (containsErrors) return { error: true, symbols: null, imports: null, exportEdges: null, diagnostics };
+      if (containsErrors) return { error: true, graphBuilder: null, diagnostics };
 
-      // Collect all symbols
-      const symbols = extractSymbolsFromSourceFile(sourceFile, filepath);
-      projectSymbols.push(...symbols);
+      // Collect all symbols and files
+      extractSymbolsFromSourceFile(sourceFile, filepath, graphBuilder);
 
       // Collect all export edges
-      const exportEdges = extractExportsFromSourceFile(sourceFile, symbols, filepath);
-      projectExportEdges.push(...exportEdges);
+      extractExportsFromSourceFile(sourceFile, filepath, graphBuilder);
 
-      // Collect file-specific imports
+      // Collect file-specific imports to use to resolve imports
       const imports = extractImportsFromSourceFile(sourceFile, root);
       importsPerFile[filepath] = imports;
-      allImports.push(...imports);
     }
 
-    const { aliasEdges, importEdges, symbols } = resolveImports(projectExportEdges, importsPerFile);
+    // Resolve imports after collecting all file's imports/exports
+    resolveImports(importsPerFile, graphBuilder);
 
-    return { error: false, symbols: projectSymbols, imports: [], exportEdges: projectExportEdges, diagnostics: null };
+    return { error: false, graphBuilder, diagnostics: null };
   }
 };

@@ -1,6 +1,7 @@
 import { FunctionDeclaration } from "ts-morph";
 import { SymbolFact } from "../../../types";
 import { getCallstack, getLocation, getSymbolId } from "../../ast";
+import { toSymbolId } from "@seergraph/shared";
 
 export function* extractFunctionDeclaration(node: FunctionDeclaration, relativePath: string): Generator<SymbolFact> {
   const isDefExp = node.isDefaultExport();
@@ -11,7 +12,7 @@ export function* extractFunctionDeclaration(node: FunctionDeclaration, relativeP
   const { id, parentId } = getSymbolId([{ name, kind: node.getKindName() }, ...callstack]);
 
   yield {
-    id,
+    id: toSymbolId(id),
     parentId,
     name,
     kind: "function",

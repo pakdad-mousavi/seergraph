@@ -1,15 +1,11 @@
-import { Edge } from "@seergraph/shared";
+import { toFileId, toSymbolId } from "@seergraph/shared";
 import { buildExportIndex } from "../linker/buildExportIndex";
-import { ImportFact, SymbolFact } from "../../types";
+import { ImportFact } from "../../types";
 import { randomUUID } from "node:crypto";
+import { GraphBuilder } from "../builders/graphBuilder";
 
-export const resolveImports = (exportEdges: Edge[], importsPerFile: Record<string, ImportFact[]>) => {
-  const expIndex = buildExportIndex(exportEdges);
-  console.log(expIndex);
-
-  const importEdges: Edge[] = [];
-  const aliasEdges: Edge[] = [];
-  const symbols: SymbolFact[] = [];
+export const resolveImports = (importsPerFile: Record<string, ImportFact[]>, graphBuilder: GraphBuilder) => {
+  const expIndex = buildExportIndex(graphBuilder);
 
   for (const [importPath, importFacts] of Object.entries(importsPerFile)) {
     for (const importFact of importFacts) {
@@ -20,96 +16,77 @@ export const resolveImports = (exportEdges: Edge[], importsPerFile: Record<strin
         const expEdge = exports.get(namedImport.imported);
         if (!expEdge?.from) continue;
 
-        importEdges.push({
+        graphBuilder.createEdge({
           id: randomUUID(),
-          from: importPath,
+          from: toFileId(importPath),
           to: expEdge.to,
-          type: "imports",
+          kind: "imports",
           meta: {
             importName: namedImport.local || namedImport.imported,
           },
         });
 
-        const id = `${importPath}#binding:${namedImport.local || namedImport.imported}`;
-        symbols.push({
-          id,
-          name: namedImport.local || namedImport.imported,
-          kind: "binding",
-          location: importFact.location,
-          parentId: importPath,
-        });
-
-        aliasEdges.push({
-          id: randomUUID(),
-          from: id,
-          to: expEdge.to,
-          type: "aliases",
-        });
+        graphBuilder.createBindingSymbolNode(
+          {
+            id: toSymbolId(`${importPath}#binding:${namedImport.local || namedImport.imported}`),
+            name: namedImport.local || namedImport.imported,
+            kind: "binding",
+            location: importFact.location,
+            parentId: importPath,
+          },
+          expEdge.to,
+        );
       }
 
       if (importFact.defaultImport) {
         const expEdge = exports.get("default");
         if (!expEdge?.from) continue;
 
-        importEdges.push({
+        graphBuilder.createEdge({
           id: randomUUID(),
-          from: importPath,
+          from: toFileId(importPath),
           to: expEdge.to,
-          type: "imports",
+          kind: "imports",
           meta: {
             importName: importFact.defaultImport,
           },
         });
 
-        const id = `${importPath}#binding:${importFact.defaultImport}`;
-        symbols.push({
-          id,
-          name: importFact.defaultImport,
-          kind: "binding",
-          location: importFact.location,
-          parentId: importPath,
-        });
-
-        aliasEdges.push({
-          id: randomUUID(),
-          from: id,
-          to: expEdge.to,
-          type: "aliases",
-        });
+        graphBuilder.createBindingSymbolNode(
+          {
+            id: toSymbolId(`${importPath}#binding:${importFact.defaultImport}`),
+            name: importFact.defaultImport,
+            kind: "binding",
+            location: importFact.location,
+            parentId: importPath,
+          },
+          expEdge.to,
+        );
       }
 
       if (importFact.namespaceImport) {
-        importEdges.push({
+        graphBuilder.createEdge({
           id: randomUUID(),
-          from: importPath,
-          to: importFact.moduleSpecifier,
-          type: "imports",
+          from: toFileId(importPath),
+          to: toFileId(importFact.moduleSpecifier),
+          kind: "imports",
           meta: {
             importName: importFact.namespaceImport,
-          },
-        });
-
-        const id = `${importPath}#binding:${importFact.namespaceImport}`;
-        symbols.push({
-          id,
-          name: importFact.namespaceImport,
-          kind: "binding",
-          location: importFact.location,
-          parentId: importPath,
-        });
-
-        aliasEdges.push({
-          id: randomUUID(),
-          from: id,
-          to: importFact.moduleSpecifier,
-          type: "aliases",
-          meta: {
             isNamespace: true,
           },
         });
+
+        graphBuilder.createBindingSymbolNode(
+          {
+            id: toSymbolId(`${importPath}#binding:${importFact.namespaceImport}`),
+            name: importFact.namespaceImport,
+            kind: "binding",
+            location: importFact.location,
+            parentId: importPath,
+          },
+          toFileId(importFact.moduleSpecifier),
+        );
       }
     }
   }
-
-  return { importEdges, aliasEdges, symbols };
 };

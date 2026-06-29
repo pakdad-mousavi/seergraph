@@ -1,4 +1,4 @@
-import { Edge } from "@seergraph/shared";
+import { Edge, toFileId, toSymbolId } from "@seergraph/shared";
 import { randomUUID } from "node:crypto";
 import { Symbol } from "ts-morph";
 
@@ -9,9 +9,9 @@ export const extractExportsFromExportSpecifier = (exportSymbol: Symbol, relative
   const aliasName = exportSymbol.getName() === origSymbol.getName() ? undefined : exportSymbol.getName();
   return {
     id: randomUUID(),
-    from: relativePath,
-    to: `${relativePath}#${origSymbol.getName()}`,
-    type: "exports",
+    from: toFileId(relativePath),
+    to: toSymbolId(`${relativePath}#${origSymbol.getName()}`),
+    kind: "exports",
     meta: {
       exportedAs: origSymbol.getName(),
       aliasName,

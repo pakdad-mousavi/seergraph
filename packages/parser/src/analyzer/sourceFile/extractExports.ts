@@ -8,9 +8,15 @@ import {
   extractExportsFromInlineDecl,
   extractExportsFromVariableDecl,
 } from "../extractors/exports";
+import { GraphBuilder } from "../builders/graphBuilder";
 
-export const extractExportsFromSourceFile = (sourceFile: SourceFile, symbols: SymbolFact[], relativePath: string) => {
+export const extractExportsFromSourceFile = (
+  sourceFile: SourceFile,
+  relativePath: string,
+  graphBuilder: GraphBuilder,
+) => {
   const expSyms = sourceFile.getExportSymbols();
+  const symbols: SymbolFact[] = [];
   const edges: Edge[] = [];
 
   for (const s of expSyms) {
@@ -32,15 +38,15 @@ export const extractExportsFromSourceFile = (sourceFile: SourceFile, symbols: Sy
     }
 
     if (Node.isExportAssignment(decl)) {
-      const res = extractExportsFromExportAssignment(s, relativePath);
-      if (res) {
-        const { edge, symbols: syms } = res;
-        console.log(syms);
-        symbols.push(...syms);
-        if (edge) edges.push(edge);
+      const extractionRes = extractExportsFromExportAssignment(s, relativePath);
+      if (extractionRes) {
+        const { edge, symbols } = extractionRes;
+        edges.push(edge);
+        symbols.push(...symbols);
       }
     }
   }
 
-  return edges;
+  symbols.forEach((s) => graphBuilder.createSymbolNode(s));
+  edges.forEach((e) => graphBuilder.createEdge(e));
 };
