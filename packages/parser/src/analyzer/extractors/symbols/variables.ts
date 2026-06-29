@@ -2,7 +2,6 @@ import { Node, VariableDeclaration } from "ts-morph";
 import { SymbolFact } from "../../../types";
 import { getCallstack, getLocation, getSymbolId } from "../../ast";
 import { extractObjectLiteral } from "./object";
-import { toSymbolId } from "@seergraph/shared";
 
 export function* extractVariableDeclaration(node: VariableDeclaration, relativePath: string): Generator<SymbolFact> {
   const name = node.getName();
@@ -17,7 +16,7 @@ export function* extractVariableDeclaration(node: VariableDeclaration, relativeP
     const callstack = getCallstack(initializer, relativePath);
     const { id, parentId } = getSymbolId([{ name, kind: initializer.getKindName() }, ...callstack]);
     yield {
-      id: toSymbolId(id),
+      id,
       parentId,
       name,
       kind: "function",
@@ -28,7 +27,7 @@ export function* extractVariableDeclaration(node: VariableDeclaration, relativeP
     const callstack = getCallstack(initializer, relativePath);
     const { id, parentId } = getSymbolId([{ name, kind: initializer.getKindName() }, ...callstack]);
     yield {
-      id: toSymbolId(id),
+      id,
       parentId,
       name,
       kind: "function",

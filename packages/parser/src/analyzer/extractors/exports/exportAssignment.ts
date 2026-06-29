@@ -30,7 +30,7 @@ export const extractExportsFromExportAssignment = (
     } else {
       symbols.push({
         id: toSymbolId(`${relativePath}#default`),
-        parentId: relativePath,
+        parentId: toFileId(relativePath),
         name: "default",
         kind: "function",
         location: getLocation(value, relativePath),

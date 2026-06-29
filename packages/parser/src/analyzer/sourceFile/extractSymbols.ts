@@ -35,6 +35,4 @@ export const extractSymbolsFromSourceFile = (
     name: path.basename(relativePath),
   };
   graphBuilder.createFileNode(fileNode);
-
-  console.log(symbols.filter((s) => s.kind));
 };

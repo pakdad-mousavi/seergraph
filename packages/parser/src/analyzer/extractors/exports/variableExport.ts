@@ -40,7 +40,7 @@ export const extractExportsFromVariableDecl = (
     return {
       id: randomUUID(),
       from: toFileId(relativePath),
-      to: toSymbolId(id),
+      to: id,
       kind: "exports",
       meta: {
         exportedAs: exportSymbol.getName(),
