@@ -1,3 +1,5 @@
+import { toFileId, toSymbolId } from "@seergraph/shared";
+
 export const getSymbolId = (callstack: { name: string; kind: string }[]) => {
   const reversed = callstack.reverse();
   const source = reversed.splice(0, 1)[0];
@@ -6,5 +8,5 @@ export const getSymbolId = (callstack: { name: string; kind: string }[]) => {
     .slice(0, reversed.length - 1)
     .map((s) => s.name)
     .join(".")}`;
-  return { id, parentId: parentId.endsWith("#") ? source.name : parentId };
+  return { id: toSymbolId(id), parentId: parentId.endsWith("#") ? toFileId(source.name) : toSymbolId(parentId) };
 };
