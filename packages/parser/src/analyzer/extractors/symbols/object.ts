@@ -1,5 +1,5 @@
 import { Node, ObjectLiteralExpression } from "ts-morph";
-import { SymbolFact } from "../../../types";
+import { SymbolNode } from "../../../types";
 import { getCallstack, getLocation, getSymbolId } from "../../ast";
 
 export function* extractObjectLiteral(
@@ -7,9 +7,9 @@ export function* extractObjectLiteral(
   name: string,
   relativePath: string,
   isFirstRun: boolean = true,
-): Generator<SymbolFact> {
+): Generator<SymbolNode> {
   // Use to collect symbolFacts. Needed so that symbolFacts can be emitted in hierarchical order
-  const symbolFacts: SymbolFact[] = [];
+  const symbolFacts: SymbolNode[] = [];
 
   // All properties of the current object
   const props = node.getProperties();

@@ -1,6 +1,5 @@
 import { Node, SourceFile } from "ts-morph";
-import { SymbolFact } from "../../types";
-import { Edge } from "@seergraph/shared";
+import { Edge, SymbolNode } from "@seergraph/shared";
 
 import {
   extractExportsFromExportAssignment,
@@ -16,7 +15,7 @@ export const extractExportsFromSourceFile = (
   graphBuilder: GraphBuilder,
 ) => {
   const expSyms = sourceFile.getExportSymbols();
-  const symbols: SymbolFact[] = [];
+  const symbols: SymbolNode[] = [];
   const edges: Edge[] = [];
 
   for (const s of expSyms) {

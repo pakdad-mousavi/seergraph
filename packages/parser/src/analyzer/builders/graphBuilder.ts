@@ -1,5 +1,4 @@
-import { Edge, FileId, FileNode, SymbolId } from "@seergraph/shared";
-import { SymbolFact } from "../../types";
+import { Edge, FileId, FileNode, SymbolId, SymbolNode } from "@seergraph/shared";
 
 import { EdgeStore } from "./edgeStore";
 import { SymbolStore } from "./symbolStore";
@@ -19,11 +18,11 @@ export class GraphBuilder {
     this.symbolStore.createFile(fileNode);
   }
 
-  public createSymbolNode(symbol: SymbolFact) {
+  public createSymbolNode(symbol: SymbolNode) {
     this.symbolStore.createSymbol(symbol);
   }
 
-  public createBindingSymbolNode(symbol: SymbolFact, target: SymbolId | FileId) {
+  public createBindingSymbolNode(symbol: SymbolNode, target: SymbolId | FileId) {
     this.symbolStore.createSymbol(symbol);
     this.edgeStore.createEdge({
       id: randomUUID(),

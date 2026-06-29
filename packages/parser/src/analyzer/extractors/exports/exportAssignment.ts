@@ -1,5 +1,4 @@
-import { toSymbolId, Edge, toFileId } from "@seergraph/shared";
-import { SymbolFact } from "../../../types";
+import { toSymbolId, Edge, toFileId, SymbolNode } from "@seergraph/shared";
 import { Node, Symbol } from "ts-morph";
 
 import { getLocation } from "../../ast";
@@ -11,13 +10,13 @@ import { extractExportsFromInlineDecl } from "./inlineExport";
 export const extractExportsFromExportAssignment = (
   exportSymbol: Symbol,
   relativePath: string,
-): { edge: Edge; symbols: SymbolFact[] } | null => {
+): { edge: Edge; symbols: SymbolNode[] } | null => {
   const exportAssignment = exportSymbol.getDeclarations()[0];
   const value = exportAssignment.getChildAtIndex(2);
   const valueSymbol = value.getSymbol();
 
   let edge: Edge;
-  let symbols: SymbolFact[] = [];
+  let symbols: SymbolNode[] = [];
 
   if (!valueSymbol) return null;
 

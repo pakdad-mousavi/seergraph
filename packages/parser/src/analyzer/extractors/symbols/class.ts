@@ -1,8 +1,8 @@
 import { ClassDeclaration } from "ts-morph";
-import { SymbolFact } from "../../../types";
+import { SymbolNode } from "@seergraph/shared";
 import { getCallstack, getLocation, getSymbolId } from "../../ast";
 
-export function* extractClassDeclaration(node: ClassDeclaration, relativePath: string): Generator<SymbolFact> {
+export function* extractClassDeclaration(node: ClassDeclaration, relativePath: string): Generator<SymbolNode> {
   const name = node.isDefaultExport() ? "default" : node.getName();
   if (!name) return;
 

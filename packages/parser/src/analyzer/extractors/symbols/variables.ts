@@ -1,9 +1,9 @@
 import { Node, VariableDeclaration } from "ts-morph";
-import { SymbolFact } from "../../../types";
+import { SymbolNode } from "@seergraph/shared";
 import { getCallstack, getLocation, getSymbolId } from "../../ast";
 import { extractObjectLiteral } from "./object";
 
-export function* extractVariableDeclaration(node: VariableDeclaration, relativePath: string): Generator<SymbolFact> {
+export function* extractVariableDeclaration(node: VariableDeclaration, relativePath: string): Generator<SymbolNode> {
   const name = node.getName();
   const initializer = node.getInitializer();
   if (!initializer) return;

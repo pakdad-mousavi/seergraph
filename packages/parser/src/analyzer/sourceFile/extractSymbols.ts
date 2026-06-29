@@ -1,7 +1,6 @@
 import { Node, SourceFile } from "ts-morph";
-import { SymbolFact } from "../../types";
 import { extractClassDeclaration, extractFunctionDeclaration, extractVariableDeclaration } from "../extractors/symbols";
-import { toFileId, FileNode } from "@seergraph/shared";
+import { toFileId, FileNode, SymbolNode } from "@seergraph/shared";
 import { GraphBuilder } from "../builders/graphBuilder";
 import path from "node:path";
 
@@ -10,7 +9,7 @@ export const extractSymbolsFromSourceFile = (
   relativePath: string,
   graphBuilder: GraphBuilder,
 ) => {
-  const symbols: SymbolFact[] = [];
+  const symbols: SymbolNode[] = [];
 
   // Collect symbols
   sourceFile.forEachDescendant((node) => {

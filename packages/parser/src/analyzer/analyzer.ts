@@ -1,7 +1,8 @@
 import path from "node:path";
 import { Diagnostic, Project, ts } from "ts-morph";
 
-import type { ImportFact, SymbolFact } from "../types";
+import type { ImportFact } from "../types";
+import type { SymbolNode } from "@seergraph/shared";
 
 import { extractExportsFromSourceFile } from "./sourceFile/extractExports";
 import { extractSymbolsFromSourceFile } from "./sourceFile/extractSymbols";
@@ -50,7 +51,7 @@ export const analyzer = (...args: AnalyzerArgs): AnalyzerReturn => {
   }
   // Otherwise take in filepaths
   else {
-    const projectSymbols: SymbolFact[] = [];
+    const projectSymbols: SymbolNode[] = [];
     const importsPerFile: Record<string, ImportFact[]> = {};
 
     // Parse input

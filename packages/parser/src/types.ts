@@ -1,17 +1,5 @@
 import { Edge, Location, SymbolKind, FileId, SymbolId } from "@seergraph/shared";
 
-export interface SymbolFact {
-  id: SymbolId;
-  name: string;
-  kind: SymbolKind;
-  location: Location;
-  parentId: SymbolId | FileId;
-}
-
-export interface BindingFact extends SymbolFact {
-  kind: "binding";
-}
-
 export interface ImportFact {
   moduleSpecifier: string;
   namedImports: {
@@ -34,7 +22,7 @@ export interface CallFact {
   scopeChain: string[];
 }
 
-export interface FileFact {
+export interface FileNode {
   fileId: FileId;
   path: string;
 }
