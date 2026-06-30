@@ -40,7 +40,7 @@ export class GraphBuilder {
     return this.symbolStore.getSymbolById(id);
   }
 
-  public getFileByIdIndex(id: FileId) {
+  public getFileById(id: FileId) {
     return this.symbolStore.getFileByIdIndex(id);
   }
 
