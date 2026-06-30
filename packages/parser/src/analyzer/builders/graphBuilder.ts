@@ -36,6 +36,18 @@ export class GraphBuilder {
     this.edgeStore.createEdge(edge);
   }
 
+  public getSymbolById(id: SymbolId) {
+    return this.symbolStore.getSymbolById(id);
+  }
+
+  public getFileByIdIndex(id: FileId) {
+    return this.symbolStore.getFileByIdIndex(id);
+  }
+
+  public getBindingByFileAndName(fileId: FileId, name: string) {
+    return this.symbolStore.getBindingByFileAndName(fileId, name);
+  }
+
   public getSymbolsSnapshot() {
     return this.symbolStore.getAllSymbols();
   }

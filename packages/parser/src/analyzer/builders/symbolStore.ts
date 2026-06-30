@@ -12,21 +12,9 @@ export class SymbolStore {
   // --------
   private fileById: Map<FileId, FileNode> = new Map();
   private symbolById: Map<SymbolId, SymbolNode> = new Map();
-  private symbolsByFile: Map<FileId, SymbolId[]> = new Map();
   private bindingsByFileAndName: Map<FileId, Map<string, SymbolId>> = new Map();
 
   constructor() {}
-
-  private indexSymbolByFile(symbol: SymbolNode) {
-    let symbols = this.symbolsByFile.get(symbol.location.fileId);
-
-    if (!symbols) {
-      symbols = [];
-      this.symbolsByFile.set(symbol.location.fileId, symbols);
-    }
-
-    symbols.push(symbol.id);
-  }
 
   private indexSymbolById(symbol: SymbolNode) {
     this.symbolById.set(symbol.id, symbol);
@@ -54,7 +42,6 @@ export class SymbolStore {
       this.symbols.push(symbol);
     }
     this.indexSymbolById(symbol);
-    this.indexSymbolByFile(symbol);
   }
 
   public createFile(fileNode: FileNode) {
@@ -77,10 +64,15 @@ export class SymbolStore {
   // ----------------
   // Index Retrieval
   // ----------------
-  public getSymbolIdIndex() {
-    return this.symbolById;
+  public getSymbolById(id: SymbolId) {
+    return this.symbolById.get(id);
   }
-  public getSymbolFileIdIndex() {
-    return this.symbolsByFile;
+
+  public getFileByIdIndex(id: FileId) {
+    return this.fileById.get(id);
+  }
+
+  public getBindingByFileAndName(fileId: FileId, name: string) {
+    return this.bindingsByFileAndName.get(fileId)?.get(name);
   }
 }
