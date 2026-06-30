@@ -7,15 +7,13 @@ describe("Correctly creates and stores both symbol and file nodes", () => {
     const symbolStore = new SymbolStore();
 
     const id = toFileId("/my_folder/dummy.ts");
-    symbolStore.createFile({
+    const fileNode = {
       id,
       name: "dummy.ts",
-    });
+    };
+    symbolStore.createFile(fileNode);
 
-    expect(symbolStore.getFileByIdIndex(id)).toStrictEqual({
-      id: "/my_folder/dummy.ts",
-      name: "dummy.ts",
-    });
+    expect(symbolStore.getFileByIdIndex(id)).toStrictEqual(fileNode);
     expect(symbolStore.getAllSymbols().length).toBe(0);
     expect(symbolStore.getSymbols().length).toBe(0);
     expect(symbolStore.getBindingSymbols().length).toBe(0);
