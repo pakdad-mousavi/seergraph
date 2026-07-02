@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { ts } from "ts-morph";
 
 import { analyzer } from "../../analyzer/analyzer";
+import { toFileId } from "@seergraph/shared";
 
 describe("Typescript analyzer correctly extracts all symbols from a file", () => {
   test("Returns diagnostics for code with errors", () => {
@@ -1309,8 +1310,283 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     ]);
   });
 
-  test("resolves named imports correctly", () => {
-    // const { error, graphBuilder, diagnostics } = analyzer("/root", false, ["test/sample.ts"]);
+  test("resolves non-aliased named imports correctly", () => {
+    const auth = `
+    export const x = () => {};
+    export const y = () => {};
+    `;
+
+    const index = `
+    import { x, y } from './dummy-file.js';
+    `;
+
+    const input = {
+      "dummy-file.ts": auth,
+      "some_other_file.ts": index,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+
+    if (error) {
+      console.log(diagnostics);
+    }
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    const bindingSymbolId = graphBuilder?.getBindingByFileAndName(toFileId("some_other_file.ts"), "x");
+    expect(bindingSymbolId).toStrictEqual("some_other_file.ts#binding:x");
+
+    const bindingSymbol = graphBuilder?.getSymbolById(bindingSymbolId!);
+    expect(bindingSymbol).toStrictEqual({
+      id: "some_other_file.ts#binding:x",
+      kind: "binding",
+      location: {
+        endChar: 44,
+        endLine: 2,
+        fileId: "some_other_file.ts",
+        startChar: 5,
+        startLine: 2,
+      },
+      name: "x",
+      parentId: "some_other_file.ts",
+    });
+
+    const aliasesEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "aliases");
+    expect(aliasesEdges).toStrictEqual([
+      {
+        from: "some_other_file.ts#binding:x",
+        id: expect.any(String),
+        kind: "aliases",
+        to: "dummy-file.ts#x",
+      },
+      {
+        from: "some_other_file.ts#binding:y",
+        id: expect.any(String),
+        kind: "aliases",
+        to: "dummy-file.ts#y",
+      },
+    ]);
+  });
+  test("resolves non-aliased named imports correctly", () => {
+    const auth = `
+    export const x = () => {};
+    export const y = () => {};
+    `;
+
+    const index = `
+    import { x, y } from './dummy-file.js';
+    `;
+
+    const input = {
+      "dummy-file.ts": auth,
+      "some_other_file.ts": index,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+
+    if (error) {
+      console.log(diagnostics);
+    }
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    const bindingSymbolId = graphBuilder?.getBindingByFileAndName(toFileId("some_other_file.ts"), "x");
+    expect(bindingSymbolId).toStrictEqual("some_other_file.ts#binding:x");
+
+    const bindingSymbol = graphBuilder?.getSymbolById(bindingSymbolId!);
+    expect(bindingSymbol).toStrictEqual({
+      id: "some_other_file.ts#binding:x",
+      kind: "binding",
+      location: {
+        endChar: 44,
+        endLine: 2,
+        fileId: "some_other_file.ts",
+        startChar: 5,
+        startLine: 2,
+      },
+      name: "x",
+      parentId: "some_other_file.ts",
+    });
+
+    const aliasesEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "aliases");
+    expect(aliasesEdges).toStrictEqual([
+      {
+        from: "some_other_file.ts#binding:x",
+        id: expect.any(String),
+        kind: "aliases",
+        to: "dummy-file.ts#x",
+      },
+      {
+        from: "some_other_file.ts#binding:y",
+        id: expect.any(String),
+        kind: "aliases",
+        to: "dummy-file.ts#y",
+      },
+    ]);
+  });
+
+  test("resolves aliased named imports correctly", () => {
+    const auth = `
+    export const x = () => {};
+    export const y = () => {};
+    `;
+
+    const index = `
+    import { x as j, y as k } from './dummy-file.js';
+    `;
+
+    const input = {
+      "dummy-file.ts": auth,
+      "some_other_file.ts": index,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+
+    if (error) {
+      console.log(diagnostics);
+    }
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    const bindingSymbolId = graphBuilder?.getBindingByFileAndName(toFileId("some_other_file.ts"), "j");
+    expect(bindingSymbolId).toStrictEqual("some_other_file.ts#binding:j");
+
+    const bindingSymbol = graphBuilder?.getSymbolById(bindingSymbolId!);
+    expect(bindingSymbol).toStrictEqual({
+      id: "some_other_file.ts#binding:j",
+      kind: "binding",
+      location: {
+        endChar: 54,
+        endLine: 2,
+        fileId: "some_other_file.ts",
+        startChar: 5,
+        startLine: 2,
+      },
+      name: "j",
+      parentId: "some_other_file.ts",
+    });
+
+    const aliasesEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "aliases");
+    expect(aliasesEdges).toStrictEqual([
+      {
+        from: "some_other_file.ts#binding:j",
+        id: expect.any(String),
+        kind: "aliases",
+        to: "dummy-file.ts#x",
+      },
+      {
+        from: "some_other_file.ts#binding:k",
+        id: expect.any(String),
+        kind: "aliases",
+        to: "dummy-file.ts#y",
+      },
+    ]);
+  });
+
+  test("resolves default imports correctly", () => {
+    const auth = `
+    export const x = () => {};
+    
+    export default x;
+    `;
+
+    const index = `
+    import x from './dummy-file.js';
+    `;
+
+    const input = {
+      "dummy-file.ts": auth,
+      "some_other_file.ts": index,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+
+    if (error) {
+      console.log(diagnostics);
+    }
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    const bindingSymbolId = graphBuilder?.getBindingByFileAndName(toFileId("some_other_file.ts"), "x");
+    expect(bindingSymbolId).toStrictEqual("some_other_file.ts#binding:x");
+
+    const bindingSymbol = graphBuilder?.getSymbolById(bindingSymbolId!);
+    expect(bindingSymbol).toStrictEqual({
+      id: "some_other_file.ts#binding:x",
+      kind: "binding",
+      location: {
+        endChar: 37,
+        endLine: 2,
+        fileId: "some_other_file.ts",
+        startChar: 5,
+        startLine: 2,
+      },
+      name: "x",
+      parentId: "some_other_file.ts",
+    });
+
+    const aliasesEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "aliases");
+    expect(aliasesEdges).toStrictEqual([
+      {
+        from: "some_other_file.ts#binding:x",
+        id: expect.any(String),
+        kind: "aliases",
+        to: "dummy-file.ts#x",
+      },
+    ]);
+  });
+
+  test("resolves namespace imports correctly", () => {
+    const auth = `
+    export const x = () => {};
+    export const y = () => {};
+    export const z = () => {};
+    `;
+
+    const index = `
+    import * as utils from './dummy-file.js';
+    `;
+
+    const input = {
+      "dummy-file.ts": auth,
+      "some_other_file.ts": index,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+
+    if (error) {
+      console.log(diagnostics);
+    }
+    expect(error).toBe(false);
+    expect(diagnostics).toBe(null);
+
+    const bindingSymbolId = graphBuilder?.getBindingByFileAndName(toFileId("some_other_file.ts"), "utils");
+    expect(bindingSymbolId).toStrictEqual("some_other_file.ts#binding:utils");
+
+    const bindingSymbol = graphBuilder?.getSymbolById(bindingSymbolId!);
+    expect(bindingSymbol).toStrictEqual({
+      id: "some_other_file.ts#binding:utils",
+      kind: "binding",
+      location: {
+        endChar: 46,
+        endLine: 2,
+        fileId: "some_other_file.ts",
+        startChar: 5,
+        startLine: 2,
+      },
+      name: "utils",
+      parentId: "some_other_file.ts",
+    });
+
+    const aliasesEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "aliases");
+    expect(aliasesEdges).toStrictEqual([
+      {
+        from: "some_other_file.ts#binding:utils",
+        id: expect.any(String),
+        kind: "aliases",
+        to: "dummy-file.ts",
+      },
+    ]);
   });
 
   test("Creates a symbol for types", { todo: true });
