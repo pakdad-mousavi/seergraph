@@ -1,15 +1,7 @@
-import { describe, expect, test, vi, beforeEach } from "vitest";
+import { describe, expect, test } from "vitest";
 import { ts } from "ts-morph";
 
-import { fs as memFs, vol } from "memfs";
 import { analyzer } from "../../analyzer/analyzer";
-
-vi.mock("node:fs", () => memFs);
-vi.mock("node:fs/promises", () => memFs.promises);
-
-beforeEach(() => {
-  vi.resetModules();
-});
 
 describe("Typescript analyzer correctly extracts all symbols from a file", () => {
   test("Returns diagnostics for code with errors", () => {
@@ -26,7 +18,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     console.log(helloWorld);
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(true);
     expect(graphBuilder).toBe(null);
@@ -47,7 +43,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     console.log(x, y, z);
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -67,7 +67,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     };
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -101,7 +105,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     };
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -128,7 +136,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     class NamedClass {}
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -159,7 +171,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     }
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -218,7 +234,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     }
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -275,7 +295,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     }
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -332,7 +356,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     }
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -419,7 +447,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     }
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -588,7 +620,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     class MyCls {}
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -604,7 +640,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export const z = [() => {}, function () {}, {}, 123, 'string'];
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -618,7 +658,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export const x = function () {};
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -643,7 +687,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export const x = function add() {};
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -668,7 +716,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export const x = () => {};
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -693,7 +745,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export const x = () => {};
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -718,7 +774,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export class x {};
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -745,7 +805,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     };
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -774,7 +838,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export { x, y, z as j, i };
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -829,7 +897,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default function () {};
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -871,7 +943,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default function add() {};
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -916,7 +992,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default add;
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -943,7 +1023,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default add;
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -970,7 +1054,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default add;
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -995,7 +1083,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default () => {};
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -1041,7 +1133,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default api;
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -1068,7 +1164,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     };
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -1124,7 +1224,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default MyCls;
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -1151,7 +1255,11 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     };
     `;
 
-    const { error, graphBuilder, diagnostics } = analyzer("./", false, code, true);
+    const input = {
+      "dummy-file.ts": code,
+    };
+
+    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
     expect(error).toBe(false);
     expect(diagnostics).toBe(null);
@@ -1199,6 +1307,10 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
         parentId: "dummy-file.ts#default",
       },
     ]);
+  });
+
+  test("resolves named imports correctly", () => {
+    // const { error, graphBuilder, diagnostics } = analyzer("/root", false, ["test/sample.ts"]);
   });
 
   test("Creates a symbol for types", { todo: true });
