@@ -10,7 +10,7 @@ export class Parser {
   public async parseProject(): Promise<void> {
     try {
       const filePaths = await scanRepo(this.root);
-      analyzer(this.root, this.useTsconfig, filePaths);
+      // analyzer({root: this.root, projectInit: });
 
       // const parse = this.parsers[".ts"];
       // await parse(filePath);
