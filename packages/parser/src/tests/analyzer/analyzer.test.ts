@@ -4,7 +4,7 @@ import { ts } from "ts-morph";
 import { analyzer } from "../../analyzer/analyzer";
 import { toFileId } from "@seergraph/shared";
 
-describe("Typescript analyzer correctly extracts all symbols from a file", () => {
+describe("Diagnostics work as intended", () => {
   test("Returns diagnostics for code with errors", () => {
     const code = `
     const x = 123;
@@ -32,7 +32,9 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     const containsErrors = diagnostics?.some((d) => d.getCategory() === ts.DiagnosticCategory.Error);
     expect(containsErrors).toBe(true);
   });
+});
 
+describe("Symbol Creation (Declarations & Scope)", () => {
   test("Ignores non-exported variables that do not contain a function", async () => {
     const code = `
     const x = 123;
@@ -605,8 +607,15 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     ]);
   });
 
-  test("Ignores exports of unexported functions/objects/classes", () => {
-    const code = `
+  test("Creates a symbol for types", { todo: true });
+  test("Creates a symbol for interfaces", { todo: true });
+  test("Creates a symbol for enums", { todo: true });
+});
+
+describe("Exports Handling", () => {
+  describe("Ignored exports", () => {
+    test("Ignores exports of unexported functions/objects/classes", () => {
+      const code = `
     const x = () => {};
     const y = function () {};
     const z = function add() {};
@@ -621,217 +630,190 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     class MyCls {}
     `;
 
-    const input = {
-      "dummy-file.ts": code,
-    };
+      const input = {
+        "dummy-file.ts": code,
+      };
 
-    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+      const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
-    expect(error).toBe(false);
-    expect(diagnostics).toBe(null);
+      expect(error).toBe(false);
+      expect(diagnostics).toBe(null);
 
-    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
-    expect(exportEdges).toStrictEqual([]);
-  });
+      const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
+      expect(exportEdges).toStrictEqual([]);
+    });
 
-  test("Ignores exports of uncallable literals without uncallable values", () => {
-    const code = `
+    test("Ignores exports of uncallable literals without uncallable values", () => {
+      const code = `
     export const x = 123;
     export const y = 'hello world';
     export const z = [() => {}, function () {}, {}, 123, 'string'];
     `;
 
-    const input = {
-      "dummy-file.ts": code,
-    };
+      const input = {
+        "dummy-file.ts": code,
+      };
 
-    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+      const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
-    expect(error).toBe(false);
-    expect(diagnostics).toBe(null);
+      expect(error).toBe(false);
+      expect(diagnostics).toBe(null);
 
-    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
-    expect(exportEdges).toStrictEqual([]);
+      const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
+      expect(exportEdges).toStrictEqual([]);
+    });
   });
 
-  test("Creates an edge for exported unnamed function declarations", () => {
-    const code = `
+  describe("named exports -> edge creation", () => {
+    test("Creates an edge for exported unnamed function declarations", () => {
+      const code = `
     export const x = function () {};
     `;
 
-    const input = {
-      "dummy-file.ts": code,
-    };
+      const input = {
+        "dummy-file.ts": code,
+      };
 
-    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+      const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
-    expect(error).toBe(false);
-    expect(diagnostics).toBe(null);
+      expect(error).toBe(false);
+      expect(diagnostics).toBe(null);
 
-    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
-    expect(exportEdges).toStrictEqual([
-      {
-        from: "dummy-file.ts",
-        id: expect.any(String),
-        meta: {
-          exportedAs: "x",
-          isDefault: false,
+      const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
+      expect(exportEdges).toStrictEqual([
+        {
+          from: "dummy-file.ts",
+          id: expect.any(String),
+          meta: {
+            exportedAs: "x",
+            isDefault: false,
+          },
+          to: "dummy-file.ts#x",
+          kind: "exports",
         },
-        to: "dummy-file.ts#x",
-        kind: "exports",
-      },
-    ]);
-  });
+      ]);
+    });
 
-  test("Creates an edge for exported named function declarations", () => {
-    const code = `
+    test("Creates an edge for exported named function declarations", () => {
+      const code = `
     export const x = function add() {};
     `;
 
-    const input = {
-      "dummy-file.ts": code,
-    };
+      const input = {
+        "dummy-file.ts": code,
+      };
 
-    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+      const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
-    expect(error).toBe(false);
-    expect(diagnostics).toBe(null);
+      expect(error).toBe(false);
+      expect(diagnostics).toBe(null);
 
-    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
-    expect(exportEdges).toStrictEqual([
-      {
-        from: "dummy-file.ts",
-        id: expect.any(String),
-        meta: {
-          exportedAs: "x",
-          isDefault: false,
+      const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
+      expect(exportEdges).toStrictEqual([
+        {
+          from: "dummy-file.ts",
+          id: expect.any(String),
+          meta: {
+            exportedAs: "x",
+            isDefault: false,
+          },
+          to: "dummy-file.ts#x",
+          kind: "exports",
         },
-        to: "dummy-file.ts#x",
-        kind: "exports",
-      },
-    ]);
-  });
+      ]);
+    });
 
-  test("Creates an edge for exported arrow functions", () => {
-    const code = `
+    test("Creates an edge for exported arrow functions", () => {
+      const code = `
     export const x = () => {};
     `;
 
-    const input = {
-      "dummy-file.ts": code,
-    };
+      const input = {
+        "dummy-file.ts": code,
+      };
 
-    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+      const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
-    expect(error).toBe(false);
-    expect(diagnostics).toBe(null);
+      expect(error).toBe(false);
+      expect(diagnostics).toBe(null);
 
-    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
-    expect(exportEdges).toStrictEqual([
-      {
-        from: "dummy-file.ts",
-        id: expect.any(String),
-        meta: {
-          exportedAs: "x",
-          isDefault: false,
+      const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
+      expect(exportEdges).toStrictEqual([
+        {
+          from: "dummy-file.ts",
+          id: expect.any(String),
+          meta: {
+            exportedAs: "x",
+            isDefault: false,
+          },
+          to: "dummy-file.ts#x",
+          kind: "exports",
         },
-        to: "dummy-file.ts#x",
-        kind: "exports",
-      },
-    ]);
-  });
+      ]);
+    });
 
-  test("Creates an edge for exported arrow functions", () => {
-    const code = `
-    export const x = () => {};
-    `;
-
-    const input = {
-      "dummy-file.ts": code,
-    };
-
-    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
-
-    expect(error).toBe(false);
-    expect(diagnostics).toBe(null);
-
-    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
-    expect(exportEdges).toStrictEqual([
-      {
-        from: "dummy-file.ts",
-        id: expect.any(String),
-        meta: {
-          exportedAs: "x",
-          isDefault: false,
-        },
-        to: "dummy-file.ts#x",
-        kind: "exports",
-      },
-    ]);
-  });
-
-  test("Creates an edge for exported classes", () => {
-    const code = `
+    test("Creates an edge for exported classes", () => {
+      const code = `
     export class x {};
     `;
 
-    const input = {
-      "dummy-file.ts": code,
-    };
+      const input = {
+        "dummy-file.ts": code,
+      };
 
-    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+      const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
-    expect(error).toBe(false);
-    expect(diagnostics).toBe(null);
+      expect(error).toBe(false);
+      expect(diagnostics).toBe(null);
 
-    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
-    expect(exportEdges).toStrictEqual([
-      {
-        from: "dummy-file.ts",
-        id: expect.any(String),
-        meta: {
-          exportedAs: "x",
-          isDefault: false,
+      const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
+      expect(exportEdges).toStrictEqual([
+        {
+          from: "dummy-file.ts",
+          id: expect.any(String),
+          meta: {
+            exportedAs: "x",
+            isDefault: false,
+          },
+          to: "dummy-file.ts#x",
+          kind: "exports",
         },
-        to: "dummy-file.ts#x",
-        kind: "exports",
-      },
-    ]);
-  });
+      ]);
+    });
 
-  test("Creates an edge for exported objects, but not their children", () => {
-    const code = `
+    test("Creates an edge for exported objects, but not their children", () => {
+      const code = `
     export const x = {
       test: () => {}
     };
     `;
 
-    const input = {
-      "dummy-file.ts": code,
-    };
+      const input = {
+        "dummy-file.ts": code,
+      };
 
-    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+      const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
-    expect(error).toBe(false);
-    expect(diagnostics).toBe(null);
+      expect(error).toBe(false);
+      expect(diagnostics).toBe(null);
 
-    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
-    expect(exportEdges).toStrictEqual([
-      {
-        from: "dummy-file.ts",
-        id: expect.any(String),
-        meta: {
-          exportedAs: "x",
-          isDefault: false,
+      const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
+      expect(exportEdges).toStrictEqual([
+        {
+          from: "dummy-file.ts",
+          id: expect.any(String),
+          meta: {
+            exportedAs: "x",
+            isDefault: false,
+          },
+          to: "dummy-file.ts#x",
+          kind: "exports",
         },
-        to: "dummy-file.ts#x",
-        kind: "exports",
-      },
-    ]);
-  });
+      ]);
+    });
 
-  test("Creates an edge for exported references, with and without aliases", () => {
-    const code = `
+    test("Creates an edge for exported references, with and without aliases", () => {
+      const code = `
     const x = () => {};
     const y = function () {};
     const z = { test() {} };
@@ -839,294 +821,420 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export { x, y, z as j, i };
     `;
 
-    const input = {
-      "dummy-file.ts": code,
-    };
+      const input = {
+        "dummy-file.ts": code,
+      };
 
-    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+      const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
-    expect(error).toBe(false);
-    expect(diagnostics).toBe(null);
+      expect(error).toBe(false);
+      expect(diagnostics).toBe(null);
 
-    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
-    expect(exportEdges).toStrictEqual([
-      {
-        from: "dummy-file.ts",
-        id: expect.any(String),
-        meta: {
-          aliasName: undefined,
-          exportedAs: "x",
+      const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
+      expect(exportEdges).toStrictEqual([
+        {
+          from: "dummy-file.ts",
+          id: expect.any(String),
+          meta: {
+            aliasName: undefined,
+            exportedAs: "x",
+          },
+          to: "dummy-file.ts#x",
+          kind: "exports",
         },
-        to: "dummy-file.ts#x",
-        kind: "exports",
-      },
-      {
-        from: "dummy-file.ts",
-        id: expect.any(String),
-        meta: {
-          aliasName: undefined,
-          exportedAs: "y",
+        {
+          from: "dummy-file.ts",
+          id: expect.any(String),
+          meta: {
+            aliasName: undefined,
+            exportedAs: "y",
+          },
+          to: "dummy-file.ts#y",
+          kind: "exports",
         },
-        to: "dummy-file.ts#y",
-        kind: "exports",
-      },
-      {
-        from: "dummy-file.ts",
-        id: expect.any(String),
-        meta: {
-          aliasName: "j",
-          exportedAs: "z",
+        {
+          from: "dummy-file.ts",
+          id: expect.any(String),
+          meta: {
+            aliasName: "j",
+            exportedAs: "z",
+          },
+          to: "dummy-file.ts#z",
+          kind: "exports",
         },
-        to: "dummy-file.ts#z",
-        kind: "exports",
-      },
-      {
-        from: "dummy-file.ts",
-        id: expect.any(String),
-        meta: {
-          aliasName: undefined,
-          exportedAs: "i",
+        {
+          from: "dummy-file.ts",
+          id: expect.any(String),
+          meta: {
+            aliasName: undefined,
+            exportedAs: "i",
+          },
+          to: "dummy-file.ts#i",
+          kind: "exports",
         },
-        to: "dummy-file.ts#i",
-        kind: "exports",
-      },
-    ]);
+      ]);
+    });
   });
 
-  test("Creates an edge and symbol for a default exported function", () => {
-    const code = `
+  describe("Default exports -> direct definitions", () => {
+    test("Creates an edge and symbol for a default exported function", () => {
+      const code = `
     export default function () {};
     `;
 
-    const input = {
-      "dummy-file.ts": code,
-    };
+      const input = {
+        "dummy-file.ts": code,
+      };
 
-    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+      const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
-    expect(error).toBe(false);
-    expect(diagnostics).toBe(null);
+      expect(error).toBe(false);
+      expect(diagnostics).toBe(null);
 
-    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
-    expect(exportEdges).toStrictEqual([
-      {
-        from: "dummy-file.ts",
-        id: expect.any(String),
-        meta: {
-          exportedAs: "default",
-          isDefault: true,
+      const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
+      expect(exportEdges).toStrictEqual([
+        {
+          from: "dummy-file.ts",
+          id: expect.any(String),
+          meta: {
+            exportedAs: "default",
+            isDefault: true,
+          },
+          to: "dummy-file.ts#default",
+          kind: "exports",
         },
-        to: "dummy-file.ts#default",
-        kind: "exports",
-      },
-    ]);
+      ]);
 
-    const symbols = graphBuilder?.getSymbolsSnapshot();
-    expect(symbols).toStrictEqual([
-      {
-        id: "dummy-file.ts#default",
-        kind: "function",
-        location: {
-          endChar: 34,
-          endLine: 2,
-          fileId: "dummy-file.ts",
-          startChar: 5,
-          startLine: 2,
+      const symbols = graphBuilder?.getSymbolsSnapshot();
+      expect(symbols).toStrictEqual([
+        {
+          id: "dummy-file.ts#default",
+          kind: "function",
+          location: {
+            endChar: 34,
+            endLine: 2,
+            fileId: "dummy-file.ts",
+            startChar: 5,
+            startLine: 2,
+          },
+          name: "default",
+          parentId: "dummy-file.ts",
         },
-        name: "default",
-        parentId: "dummy-file.ts",
-      },
-    ]);
-  });
+      ]);
+    });
 
-  test("Creates an edge and symbol for a default exported function with a name", () => {
-    const code = `
+    test("Creates an edge and symbol for a default exported function with a name", () => {
+      const code = `
     export default function add() {};
     `;
 
-    const input = {
-      "dummy-file.ts": code,
-    };
+      const input = {
+        "dummy-file.ts": code,
+      };
 
-    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+      const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
-    expect(error).toBe(false);
-    expect(diagnostics).toBe(null);
+      expect(error).toBe(false);
+      expect(diagnostics).toBe(null);
 
-    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
-    expect(exportEdges).toStrictEqual([
-      {
-        from: "dummy-file.ts",
-        id: expect.any(String),
-        meta: {
-          exportedAs: "default",
-          isDefault: true,
+      const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
+      expect(exportEdges).toStrictEqual([
+        {
+          from: "dummy-file.ts",
+          id: expect.any(String),
+          meta: {
+            exportedAs: "default",
+            isDefault: true,
+          },
+          to: "dummy-file.ts#default",
+          kind: "exports",
         },
-        to: "dummy-file.ts#default",
-        kind: "exports",
-      },
-    ]);
+      ]);
 
-    const symbols = graphBuilder?.getSymbolsSnapshot();
+      const symbols = graphBuilder?.getSymbolsSnapshot();
 
-    expect(symbols).toStrictEqual([
-      {
-        id: "dummy-file.ts#default",
-        kind: "function",
-        location: {
-          endChar: 37,
-          endLine: 2,
-          fileId: "dummy-file.ts",
-          startChar: 5,
-          startLine: 2,
+      expect(symbols).toStrictEqual([
+        {
+          id: "dummy-file.ts#default",
+          kind: "function",
+          location: {
+            endChar: 37,
+            endLine: 2,
+            fileId: "dummy-file.ts",
+            startChar: 5,
+            startLine: 2,
+          },
+          name: "default",
+          parentId: "dummy-file.ts",
         },
-        name: "default",
-        parentId: "dummy-file.ts",
-      },
-    ]);
-  });
+      ]);
+    });
 
-  test("Creates an edge for a default export referencing a function declaration", () => {
-    const code = `
-    function add() {}
-
-    export default add;
+    test("Creates an edge for a default exported arrow function", () => {
+      const code = `
+    export default () => {};
     `;
 
-    const input = {
-      "dummy-file.ts": code,
-    };
+      const input = {
+        "dummy-file.ts": code,
+      };
 
-    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+      const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
-    expect(error).toBe(false);
-    expect(diagnostics).toBe(null);
+      expect(error).toBe(false);
+      expect(diagnostics).toBe(null);
 
-    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
-    expect(exportEdges).toStrictEqual([
-      {
-        from: "dummy-file.ts",
-        id: expect.any(String),
-        meta: {
-          exportedAs: "add",
-          isDefault: true,
+      const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
+      expect(exportEdges).toStrictEqual([
+        {
+          from: "dummy-file.ts",
+          id: expect.any(String),
+          meta: {
+            exportedAs: "default",
+            isDefault: true,
+          },
+          to: "dummy-file.ts#default",
+          kind: "exports",
         },
-        to: "dummy-file.ts#add",
-        kind: "exports",
-      },
-    ]);
-  });
+      ]);
 
-  test("Creates an edge for a default export referencing a function expression", () => {
-    const code = `
-    const add = function () {}
+      const symbols = graphBuilder?.getSymbolsSnapshot();
+      expect(symbols).toStrictEqual([
+        {
+          id: "dummy-file.ts#default",
+          kind: "function",
+          location: {
+            endChar: 28,
+            endLine: 2,
+            fileId: "dummy-file.ts",
+            startChar: 20,
+            startLine: 2,
+          },
+          name: "default",
+          parentId: "dummy-file.ts",
+        },
+      ]);
+    });
 
-    export default add;
+    test("Creates an edge and symbols for a default exported object", () => {
+      const code = `
+    export default {
+      test: () => {}
+    };
     `;
 
-    const input = {
-      "dummy-file.ts": code,
-    };
+      const input = {
+        "dummy-file.ts": code,
+      };
 
-    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+      const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
-    expect(error).toBe(false);
-    expect(diagnostics).toBe(null);
+      expect(error).toBe(false);
+      expect(diagnostics).toBe(null);
 
-    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
-    expect(exportEdges).toStrictEqual([
-      {
-        from: "dummy-file.ts",
-        id: expect.any(String),
-        meta: {
-          exportedAs: "add",
-          isDefault: true,
+      const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
+      expect(exportEdges).toStrictEqual([
+        {
+          from: "dummy-file.ts",
+          id: expect.any(String),
+          meta: {
+            exportedAs: "default",
+            isDefault: true,
+          },
+          to: "dummy-file.ts#default",
+          kind: "exports",
         },
-        to: "dummy-file.ts#add",
-        kind: "exports",
-      },
-    ]);
+      ]);
+
+      const symbols = graphBuilder?.getSymbolsSnapshot();
+      expect(symbols).toStrictEqual([
+        {
+          id: "dummy-file.ts#default",
+          kind: "object",
+          location: {
+            endChar: 48,
+            endLine: 4,
+            fileId: "dummy-file.ts",
+            startChar: 20,
+            startLine: 2,
+          },
+          name: "default",
+          parentId: "dummy-file.ts",
+        },
+        {
+          id: "dummy-file.ts#default.test",
+          kind: "method",
+          location: {
+            endChar: 42,
+            endLine: 3,
+            fileId: "dummy-file.ts",
+            startChar: 34,
+            startLine: 3,
+          },
+          name: "test",
+          parentId: "dummy-file.ts#default",
+        },
+      ]);
+    });
+
+    test("Creates an edge for a default exported class and its methods", () => {
+      const code = `
+    export default class {
+      private test() {}
+    };
+    `;
+
+      const input = {
+        "dummy-file.ts": code,
+      };
+
+      const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+
+      expect(error).toBe(false);
+      expect(diagnostics).toBe(null);
+
+      const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
+      expect(exportEdges).toStrictEqual([
+        {
+          from: "dummy-file.ts",
+          id: expect.any(String),
+          meta: {
+            exportedAs: "default",
+            isDefault: true,
+          },
+          to: "dummy-file.ts#default",
+          kind: "exports",
+        },
+      ]);
+
+      const symbols = graphBuilder?.getSymbolsSnapshot();
+      expect(symbols).toStrictEqual([
+        {
+          id: "dummy-file.ts#default",
+          kind: "class",
+          location: {
+            endChar: 57,
+            endLine: 4,
+            fileId: "dummy-file.ts",
+            startChar: 5,
+            startLine: 2,
+          },
+          name: "default",
+          parentId: "dummy-file.ts",
+        },
+        {
+          id: "dummy-file.ts#default.test",
+          kind: "method",
+          location: {
+            endChar: 51,
+            endLine: 3,
+            fileId: "dummy-file.ts",
+            startChar: 34,
+            startLine: 3,
+          },
+          name: "test",
+          parentId: "dummy-file.ts#default",
+        },
+      ]);
+    });
   });
 
-  test("Creates an edge for a default export referencing an arrow function", () => {
-    const code = `
+  describe("Default exports -> references", () => {
+    test("Creates an edge for a default export referencing an arrow function", () => {
+      const code = `
     const add = () => {};
 
     export default add;
     `;
 
-    const input = {
-      "dummy-file.ts": code,
-    };
+      const input = {
+        "dummy-file.ts": code,
+      };
 
-    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+      const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
-    expect(error).toBe(false);
-    expect(diagnostics).toBe(null);
+      expect(error).toBe(false);
+      expect(diagnostics).toBe(null);
 
-    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
-    expect(exportEdges).toStrictEqual([
-      {
-        from: "dummy-file.ts",
-        id: expect.any(String),
-        meta: {
-          exportedAs: "add",
-          isDefault: true,
+      const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
+      expect(exportEdges).toStrictEqual([
+        {
+          from: "dummy-file.ts",
+          id: expect.any(String),
+          meta: {
+            exportedAs: "add",
+            isDefault: true,
+          },
+          to: "dummy-file.ts#add",
+          kind: "exports",
         },
-        to: "dummy-file.ts#add",
-        kind: "exports",
-      },
-    ]);
-  });
+      ]);
+    });
 
-  test("Creates an edge for a default exported arrow function", () => {
-    const code = `
-    export default () => {};
+    test("Creates an edge for a default export referencing a function declaration", () => {
+      const code = `
+    function add() {}
+
+    export default add;
     `;
 
-    const input = {
-      "dummy-file.ts": code,
-    };
+      const input = {
+        "dummy-file.ts": code,
+      };
 
-    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+      const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
-    expect(error).toBe(false);
-    expect(diagnostics).toBe(null);
+      expect(error).toBe(false);
+      expect(diagnostics).toBe(null);
 
-    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
-    expect(exportEdges).toStrictEqual([
-      {
-        from: "dummy-file.ts",
-        id: expect.any(String),
-        meta: {
-          exportedAs: "default",
-          isDefault: true,
+      const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
+      expect(exportEdges).toStrictEqual([
+        {
+          from: "dummy-file.ts",
+          id: expect.any(String),
+          meta: {
+            exportedAs: "add",
+            isDefault: true,
+          },
+          to: "dummy-file.ts#add",
+          kind: "exports",
         },
-        to: "dummy-file.ts#default",
-        kind: "exports",
-      },
-    ]);
+      ]);
+    });
 
-    const symbols = graphBuilder?.getSymbolsSnapshot();
-    expect(symbols).toStrictEqual([
-      {
-        id: "dummy-file.ts#default",
-        kind: "function",
-        location: {
-          endChar: 28,
-          endLine: 2,
-          fileId: "dummy-file.ts",
-          startChar: 20,
-          startLine: 2,
+    test("Creates an edge for a default export referencing a function expression", () => {
+      const code = `
+    const add = function () {}
+
+    export default add;
+    `;
+
+      const input = {
+        "dummy-file.ts": code,
+      };
+
+      const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+
+      expect(error).toBe(false);
+      expect(diagnostics).toBe(null);
+
+      const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
+      expect(exportEdges).toStrictEqual([
+        {
+          from: "dummy-file.ts",
+          id: expect.any(String),
+          meta: {
+            exportedAs: "add",
+            isDefault: true,
+          },
+          to: "dummy-file.ts#add",
+          kind: "exports",
         },
-        name: "default",
-        parentId: "dummy-file.ts",
-      },
-    ]);
-  });
+      ]);
+    });
 
-  test("Creates an edge for a default export referencing an object", () => {
-    const code = `
+    test("Creates an edge for a default export referencing an object", () => {
+      const code = `
     const api = {
       test: () => {},
     };
@@ -1134,182 +1242,63 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
     export default api;
     `;
 
-    const input = {
-      "dummy-file.ts": code,
-    };
+      const input = {
+        "dummy-file.ts": code,
+      };
 
-    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+      const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
-    expect(error).toBe(false);
-    expect(diagnostics).toBe(null);
+      expect(error).toBe(false);
+      expect(diagnostics).toBe(null);
 
-    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
-    expect(exportEdges).toStrictEqual([
-      {
-        from: "dummy-file.ts",
-        id: expect.any(String),
-        meta: {
-          exportedAs: "api",
-          isDefault: true,
+      const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
+      expect(exportEdges).toStrictEqual([
+        {
+          from: "dummy-file.ts",
+          id: expect.any(String),
+          meta: {
+            exportedAs: "api",
+            isDefault: true,
+          },
+          to: "dummy-file.ts#api",
+          kind: "exports",
         },
-        to: "dummy-file.ts#api",
-        kind: "exports",
-      },
-    ]);
-  });
+      ]);
+    });
 
-  test("Creates an edge and symbols for a default exported object", () => {
-    const code = `
-    export default {
-      test: () => {}
-    };
-    `;
-
-    const input = {
-      "dummy-file.ts": code,
-    };
-
-    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
-
-    expect(error).toBe(false);
-    expect(diagnostics).toBe(null);
-
-    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
-    expect(exportEdges).toStrictEqual([
-      {
-        from: "dummy-file.ts",
-        id: expect.any(String),
-        meta: {
-          exportedAs: "default",
-          isDefault: true,
-        },
-        to: "dummy-file.ts#default",
-        kind: "exports",
-      },
-    ]);
-
-    const symbols = graphBuilder?.getSymbolsSnapshot();
-    expect(symbols).toStrictEqual([
-      {
-        id: "dummy-file.ts#default",
-        kind: "object",
-        location: {
-          endChar: 48,
-          endLine: 4,
-          fileId: "dummy-file.ts",
-          startChar: 20,
-          startLine: 2,
-        },
-        name: "default",
-        parentId: "dummy-file.ts",
-      },
-      {
-        id: "dummy-file.ts#default.test",
-        kind: "method",
-        location: {
-          endChar: 42,
-          endLine: 3,
-          fileId: "dummy-file.ts",
-          startChar: 34,
-          startLine: 3,
-        },
-        name: "test",
-        parentId: "dummy-file.ts#default",
-      },
-    ]);
-  });
-
-  test("Creates an edge for a default export referencing a class", () => {
-    const code = `
+    test("Creates an edge for a default export referencing a class", () => {
+      const code = `
     class MyCls {}
     export default MyCls;
     `;
 
-    const input = {
-      "dummy-file.ts": code,
-    };
+      const input = {
+        "dummy-file.ts": code,
+      };
 
-    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
+      const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
 
-    expect(error).toBe(false);
-    expect(diagnostics).toBe(null);
+      expect(error).toBe(false);
+      expect(diagnostics).toBe(null);
 
-    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
-    expect(exportEdges).toStrictEqual([
-      {
-        from: "dummy-file.ts",
-        id: expect.any(String),
-        meta: {
-          exportedAs: "MyCls",
-          isDefault: true,
+      const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
+      expect(exportEdges).toStrictEqual([
+        {
+          from: "dummy-file.ts",
+          id: expect.any(String),
+          meta: {
+            exportedAs: "MyCls",
+            isDefault: true,
+          },
+          to: "dummy-file.ts#MyCls",
+          kind: "exports",
         },
-        to: "dummy-file.ts#MyCls",
-        kind: "exports",
-      },
-    ]);
+      ]);
+    });
   });
+});
 
-  test("Creates an edge for a default exported class and its methods", () => {
-    const code = `
-    export default class {
-      private test() {}
-    };
-    `;
-
-    const input = {
-      "dummy-file.ts": code,
-    };
-
-    const { error, graphBuilder, diagnostics } = analyzer({ root: "./", input, projectInit: "empty" });
-
-    expect(error).toBe(false);
-    expect(diagnostics).toBe(null);
-
-    const exportEdges = graphBuilder?.getEdgesSnapshot().filter((e) => e.kind === "exports");
-    expect(exportEdges).toStrictEqual([
-      {
-        from: "dummy-file.ts",
-        id: expect.any(String),
-        meta: {
-          exportedAs: "default",
-          isDefault: true,
-        },
-        to: "dummy-file.ts#default",
-        kind: "exports",
-      },
-    ]);
-
-    const symbols = graphBuilder?.getSymbolsSnapshot();
-    expect(symbols).toStrictEqual([
-      {
-        id: "dummy-file.ts#default",
-        kind: "class",
-        location: {
-          endChar: 57,
-          endLine: 4,
-          fileId: "dummy-file.ts",
-          startChar: 5,
-          startLine: 2,
-        },
-        name: "default",
-        parentId: "dummy-file.ts",
-      },
-      {
-        id: "dummy-file.ts#default.test",
-        kind: "method",
-        location: {
-          endChar: 51,
-          endLine: 3,
-          fileId: "dummy-file.ts",
-          startChar: 34,
-          startLine: 3,
-        },
-        name: "test",
-        parentId: "dummy-file.ts#default",
-      },
-    ]);
-  });
-
+describe("Import Resolution", () => {
   test("resolves non-aliased named imports correctly", () => {
     const auth = `
     export const x = () => {};
@@ -1588,8 +1577,4 @@ describe("Typescript analyzer correctly extracts all symbols from a file", () =>
       },
     ]);
   });
-
-  test("Creates a symbol for types", { todo: true });
-  test("Creates a symbol for interfaces", { todo: true });
-  test("Creates a symbol for enums", { todo: true });
 });
