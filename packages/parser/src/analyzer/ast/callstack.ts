@@ -16,7 +16,7 @@ type CallstackEntry = {
   kind: string;
 };
 
-export const getCallstack = (node: Node, relativePath: string): CallstackEntry[] => {
+export const getLexicalPath = (node: Node, relativePath: string): CallstackEntry[] => {
   const symbolKinds = [
     // TOP-LEVEL
     SyntaxKind.SourceFile,
@@ -80,7 +80,7 @@ export const getCallstack = (node: Node, relativePath: string): CallstackEntry[]
       case SyntaxKind.ArrowFunction:
       case SyntaxKind.FunctionExpression: {
         const parent = maybeNamedAncestor.getParentIfKind(SyntaxKind.VariableDeclaration);
-        if (!parent) throw new Error("Anonymous arrow function / function expression detected");
+        if (!parent) continue;
         ancestorName = parent.getName();
         break;
       }
@@ -120,6 +120,5 @@ export const getCallstack = (node: Node, relativePath: string): CallstackEntry[]
     nameKindPairs.push({ name: ancestorName, kind: ancestor.getKindName() });
   }
 
-  console.log(nameKindPairs);
   return nameKindPairs;
 };

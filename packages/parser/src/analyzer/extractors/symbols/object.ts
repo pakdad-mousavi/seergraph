@@ -1,6 +1,6 @@
 import { Node, ObjectLiteralExpression } from "ts-morph";
 import { SymbolNode } from "../../../types";
-import { getCallstack, getLocation, getSymbolId } from "../../ast";
+import { getLexicalPath, getLocation, getSymbolId } from "../../ast";
 
 export function* extractObjectLiteral(
   node: ObjectLiteralExpression,
@@ -24,7 +24,7 @@ export function* extractObjectLiteral(
     // -----------------------------------
     if (Node.isMethodDeclaration(prop)) {
       const name = prop.getName();
-      const callstack = getCallstack(prop, relativePath);
+      const callstack = getLexicalPath(prop, relativePath);
       const { id, parentId } = getSymbolId([{ name, kind: prop.getKindName() }, ...callstack]);
 
       symbolFacts.push({
@@ -62,7 +62,7 @@ export function* extractObjectLiteral(
       // -------------------------------------------------------------------
       if (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer)) {
         const name = prop.getName();
-        const callstack = getCallstack(prop, relativePath);
+        const callstack = getLexicalPath(prop, relativePath);
         const { id, parentId } = getSymbolId([{ name, kind: prop.getKindName() }, ...callstack]);
         symbolFacts.push({
           id,
@@ -82,7 +82,7 @@ export function* extractObjectLiteral(
   // then emit all of the symbols collected under that object
   // -------------------------------------------------------------
   if (containsCallableDescendants) {
-    const callstack = getCallstack(node, relativePath);
+    const callstack = getLexicalPath(node, relativePath);
     // Only insert the node's name if it is not a top-level ObjectLiteralExpression
     if (!isFirstRun) {
       callstack.unshift({ name, kind: node.getKindName() });

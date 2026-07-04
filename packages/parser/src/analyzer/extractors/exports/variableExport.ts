@@ -1,7 +1,7 @@
 import { Edge, toFileId, toSymbolId } from "@seergraph/shared";
 import { randomUUID } from "node:crypto";
 import { Node, PropertyAssignment, Symbol, VariableDeclaration } from "ts-morph";
-import { getCallstack, getSymbolId } from "../../ast";
+import { getLexicalPath, getSymbolId } from "../../ast";
 
 export const extractExportsFromVariableDecl = (
   node: VariableDeclaration,
@@ -31,7 +31,7 @@ export const extractExportsFromVariableDecl = (
 
   if (Node.isPropertyAccessExpression(initializer)) {
     const propertyAssignment = initializer.getSymbol()?.getDeclarations()[0] as PropertyAssignment;
-    const callstack = getCallstack(propertyAssignment, relativePath);
+    const callstack = getLexicalPath(propertyAssignment, relativePath);
     const { id } = getSymbolId([
       { name: propertyAssignment.getName(), kind: propertyAssignment.getKindName() },
       ...callstack,
