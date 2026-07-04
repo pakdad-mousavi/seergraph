@@ -46,7 +46,7 @@ export interface SymbolNode {
   name: string;
   kind: SymbolKind;
   location: Location;
-  parentId: SymbolId | FileId;
+  parentId: SymbolId | FileId | null;
 }
 
 export interface BindingNode extends SymbolNode {
