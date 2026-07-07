@@ -28,6 +28,8 @@ export function run() {
   utilities.utilThree();
   tnt();
   login();
+
+  speakMethods.silence();
 }
 
 // EXPORTED CLASS
@@ -89,6 +91,9 @@ class PrivateUserService implements IPrivateUserService {
   // METHODS
   static getUser() {
     console.log("random user");
+    return {
+      test: () => {}
+    }
   }
 
   private getRole(): UserRole {
@@ -142,6 +147,9 @@ const abc = 54,
 
 console.log(PrivateUserService.getUser());
 
+const t = PrivateUserService.getUser();
+t.test();
+
 const userModel = new PrivateUserService("my-model", "my-prop");
 
 userModel.getSession();
@@ -168,8 +176,11 @@ const api = {
   },
 };
 
+api.admin.delete();
+
 // Objects with properties only should be ignored
 const config = {
   color: "red",
   size: 12,
 };
+
