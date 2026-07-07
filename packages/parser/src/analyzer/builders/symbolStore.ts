@@ -1,4 +1,4 @@
-import { FileId, FileNode, SymbolId, BindingNode, SymbolNode } from "@seergraph/shared";
+import { FileId, FileNode, SymbolId, BindingNode, SymbolNode, toSymbolId, toFileId } from "@seergraph/shared";
 
 export class SymbolStore {
   // -------------
@@ -12,6 +12,7 @@ export class SymbolStore {
   // --------
   private fileById: Map<FileId, FileNode> = new Map();
   private symbolById: Map<SymbolId, SymbolNode> = new Map();
+  private symbolChildren = new Map<SymbolId | FileId, Map<string, SymbolNode>>();
   private bindingsByFileAndName: Map<FileId, Map<string, SymbolId>> = new Map();
 
   constructor() {}
@@ -31,6 +32,19 @@ export class SymbolStore {
     this.bindingsByFileAndName.set(symbol.location.fileId, symbolNamesToIds);
   }
 
+  private indexSymbolChildren(symbol: SymbolNode) {
+    if (!symbol.parentId) return;
+
+    let children = this.symbolChildren.get(symbol.parentId);
+
+    if (!children) {
+      children = new Map();
+      this.symbolChildren.set(symbol.parentId, children);
+    }
+
+    children.set(symbol.name, symbol);
+  }
+
   // ----------------
   // Symbol Creation
   // ----------------
@@ -41,6 +55,7 @@ export class SymbolStore {
     } else {
       this.symbols.push(symbol);
     }
+    this.indexSymbolChildren(symbol);
     this.indexSymbolById(symbol);
   }
 
@@ -64,15 +79,24 @@ export class SymbolStore {
   // ----------------
   // Index Retrieval
   // ----------------
-  public getSymbolById(id: SymbolId) {
-    return this.symbolById.get(id);
+  public getSymbolById(id: string | SymbolId) {
+    return this.symbolById.get(toSymbolId(id));
   }
 
-  public getFileByIdIndex(id: FileId) {
-    return this.fileById.get(id);
+  public getFileByIdIndex(id: string | FileId) {
+    return this.fileById.get(toFileId(id));
   }
 
-  public getBindingByFileAndName(fileId: FileId, name: string) {
-    return this.bindingsByFileAndName.get(fileId)?.get(name);
+  public getBindingByFileAndName(fileId: string | FileId, name: string) {
+    return this.bindingsByFileAndName.get(toFileId(fileId))?.get(name);
+  }
+
+  public getChild(parent: SymbolId | FileId | null, name: string) {
+    if (!parent) return undefined;
+
+    const children = this.symbolChildren.get(parent);
+    const symbol = children?.get(name);
+
+    return symbol;
   }
 }

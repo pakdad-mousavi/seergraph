@@ -36,15 +36,19 @@ export class GraphBuilder {
     this.edgeStore.createEdge(edge);
   }
 
-  public getSymbolById(id: SymbolId) {
+  public getSymbolById(id: string | SymbolId) {
     return this.symbolStore.getSymbolById(id);
   }
 
-  public getFileById(id: FileId) {
+  public getChild(parent: SymbolId | FileId | null, name: string) {
+    return this.symbolStore.getChild(parent, name);
+  }
+
+  public getFileById(id: string | FileId) {
     return this.symbolStore.getFileByIdIndex(id);
   }
 
-  public getBindingByFileAndName(fileId: FileId, name: string) {
+  public getBindingByFileAndName(fileId: string | FileId, name: string) {
     return this.symbolStore.getBindingByFileAndName(fileId, name);
   }
 
