@@ -61,6 +61,19 @@ export interface FileNode {
   name: string;
 }
 
+export type ResolvedValue =
+  | { kind: "symbol"; symbolId: SymbolId }
+  | { kind: "object"; symbolId: SymbolId }
+  | { kind: "class"; classId: SymbolId }
+  | { kind: "instance"; classId: SymbolId }
+  | { kind: "namespace"; fileId: FileId }
+  | { kind: "unknown" };
+
+export interface LexicalScope {
+  id: SymbolId;
+  parentId: SymbolId | FileId | null;
+}
+
 /**
   The edge connecting any two nodes.
 */

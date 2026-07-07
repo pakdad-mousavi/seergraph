@@ -1,12 +1,15 @@
-import { toFileId, toSymbolId } from "@seergraph/shared";
+import { LexicalScope, toFileId, toSymbolId } from "@seergraph/shared";
 
-export const getSymbolId = (callstack: { name: string; kind: string }[]) => {
-  // Handle singular "SourceFile" callstack items
-  if (callstack.length === 1 && callstack[0].kind === "SourceFile") {
-    return { id: toSymbolId(callstack[0].name), parentId: null };
+export const getSymbolId = (lexicalStack: { name: string; kind: string }[]): LexicalScope => {
+  // Duplicate to avoid modification of original stack
+  const stack = lexicalStack.slice();
+
+  // Handle singular "SourceFile" lexicalStack items
+  if (stack.length === 1 && stack[0].kind === "SourceFile") {
+    return { id: toSymbolId(stack[0].name), parentId: null };
   }
 
-  const reversed = callstack.reverse();
+  const reversed = stack.reverse();
   const source = reversed.splice(0, 1)[0];
   const id = `${source.name}#${reversed.map((s) => s.name).join(".")}`;
   const parentId = `${source.name}#${reversed
