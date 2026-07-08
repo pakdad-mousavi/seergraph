@@ -92,8 +92,8 @@ class PrivateUserService implements IPrivateUserService {
   static getUser() {
     console.log("random user");
     return {
-      test: () => {}
-    }
+      test: () => {},
+    };
   }
 
   private getRole(): UserRole {
@@ -183,4 +183,3 @@ const config = {
   color: "red",
   size: 12,
 };
-
