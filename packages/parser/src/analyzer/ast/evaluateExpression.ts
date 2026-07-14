@@ -1,30 +1,30 @@
-import {
-  Identifier,
-  NewExpression,
-  Node,
-  ObjectLiteralExpression,
-  PropertyAccessExpression,
-  ThisExpression,
-} from "ts-morph";
+import { LeftHandSideExpression, Node } from "ts-morph";
 
-import { getLexicalPath } from "./callstack";
-import { getSymbolId } from "./symbolId";
 import { GraphBuilder } from "../builders/graphBuilder";
-import { FileId, SymbolId, toFileId, toSymbolId } from "@seergraph/shared";
-
-type ResolvedValue =
-  | { kind: "symbol"; symbolId: SymbolId }
-  | { kind: "object"; symbolId: SymbolId }
-  | { kind: "class"; classId: SymbolId }
-  | { kind: "instance"; classId: SymbolId }
-  | { kind: "namespace"; fileId: FileId }
-  | { kind: "unknown" };
+import { FileId, LexicalScope, ResolvedValue, SymbolId } from "@seergraph/shared";
+import { resolvePropertyAccess } from "../resolvers/propertyAccess";
+import { resolveIdentifier } from "../resolvers/identifier";
 
 export const evaluateExpression = (
-  expression: Identifier | PropertyAccessExpression | NewExpression | ThisExpression | ObjectLiteralExpression,
+  expression: LeftHandSideExpression,
+  lexicalScope: LexicalScope,
   fileId: FileId,
   graphBuilder: GraphBuilder,
 ): ResolvedValue => {
+  //   Node.isPropertyAccessExpression(expression) ||
+  // Node.isIdentifier(expression) ||
+  // Node.isObjectLiteralExpression(expression) ||
+  // Node.isNewExpression(expression) ||
+  // Node.isThisExpression(expression)
+
+  if (Node.isPropertyAccessExpression(expression)) {
+    console.log(resolvePropertyAccess(expression, lexicalScope, fileId, graphBuilder));
+  }
+
+  if (Node.isIdentifier(expression)) {
+    console.log(resolveIdentifier(expression, lexicalScope, fileId, graphBuilder));
+  }
+
   return { kind: "unknown" };
 
   // const stack = getLexicalPath(callExpression, fileId);
