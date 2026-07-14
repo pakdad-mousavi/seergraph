@@ -1,5 +1,5 @@
 import path from "node:path";
-import { Diagnostic, Project, SourceFile, ts } from "ts-morph";
+import { CallExpression, Diagnostic, Node, Project, SourceFile, SyntaxKind, ts } from "ts-morph";
 
 import type { ImportFact } from "../types";
 
@@ -8,6 +8,9 @@ import { extractSymbolsFromSourceFile } from "./sourceFile/extractSymbols";
 import { extractImportsFromSourceFile } from "./sourceFile/extractImports";
 import { resolveImports } from "./sourceFile/resolveImports";
 import { GraphBuilder } from "./builders/graphBuilder";
+import { evaluateExpression } from "./ast/evaluateExpression";
+import { toFileId } from "@seergraph/shared";
+import { getLexicalPath, getSymbolId } from "./ast";
 
 type AnalyzerOptions =
   | {
@@ -97,8 +100,11 @@ export const analyzer = (options: AnalyzerOptions): AnalyzerReturn => {
     const containsErrors = diagnostics.some((d) => d.getCategory() === ts.DiagnosticCategory.Error);
     if (containsErrors) return { error: true, graphBuilder: null, diagnostics };
 
-    // Extraction
+    // symbol extraction phase (TODO: do not go through AST 3 separate times)
     extractSymbolsFromSourceFile(sourceFile, filepath, graphBuilder);
+    
+
+    // Export and import extraction phase
     extractExportsFromSourceFile(sourceFile, filepath, graphBuilder);
     const imports = extractImportsFromSourceFile(sourceFile, root);
     importsPerFile[filepath] = imports;
@@ -106,6 +112,29 @@ export const analyzer = (options: AnalyzerOptions): AnalyzerReturn => {
 
   // Resolve imports after collecting all file's imports/exports
   resolveImports(importsPerFile, graphBuilder);
+
+  // Call extraction
+  for (const entry of entries) {
+    const { filepath, sourceFile } = entry;
+    if (filepath.endsWith("index.ts")) {
+      console.log("\n\n\n\n\n\n\n");
+
+      sourceFile.forEachDescendant((d) => {
+        if (Node.isCallExpression(d) || Node.isNewExpression(d)) {
+          const expression = d.getExpression();
+          console.log("-------------------------------------", expression.getText());
+
+          const caller = getSymbolId(getLexicalPath(d, filepath));
+
+          console.log("-------------------------------------", expression.getKindName());
+          const callee = evaluateExpression(expression, caller, toFileId(filepath), graphBuilder);
+          console.log("\n");
+        }
+      });
+    }
+  }
+
+  // console.log(graphBuilder.getSymbolsSnapshot());
 
   return { error: false, graphBuilder, diagnostics: null };
 };
