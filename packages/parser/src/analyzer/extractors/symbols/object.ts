@@ -1,5 +1,5 @@
 import { Node, ObjectLiteralExpression } from "ts-morph";
-import { SymbolNode } from "../../../types";
+import { SymbolNode, toSymbolId } from "@seergraph/shared";
 import { getLexicalPath, getLocation, getSymbolId } from "../../ast";
 
 export function* extractObjectLiteral(
@@ -43,14 +43,14 @@ export function* extractObjectLiteral(
     // Handle all of the object's properties
     // --------------------------------------
     if (Node.isPropertyAssignment(prop)) {
-      // Get initializer node
+      // Get initializer node and property name
       const initializer = prop.getInitializer();
+      const name = prop.getName();
 
       // -------------------------------------
       // Recursively get all object's methods
       // -------------------------------------
       if (Node.isObjectLiteralExpression(initializer)) {
-        const name = prop.getName();
         const symbols = [...extractObjectLiteral(initializer, name, relativePath, false)];
         containsCallableDescendants ||= symbols.length > 0;
         symbolFacts.push(...symbols);
@@ -61,7 +61,6 @@ export function* extractObjectLiteral(
       // Handle arrow functions / function expressions stored in a property
       // -------------------------------------------------------------------
       if (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer)) {
-        const name = prop.getName();
         const callstack = getLexicalPath(prop, relativePath);
         const { id, parentId } = getSymbolId([{ name, kind: prop.getKindName() }, ...callstack]);
         symbolFacts.push({
@@ -91,7 +90,7 @@ export function* extractObjectLiteral(
     const { id, parentId } = getSymbolId(callstack);
 
     yield {
-      id: parentId === relativePath ? `${relativePath}#${name}` : id,
+      id: parentId === relativePath ? toSymbolId(`${relativePath}#${name}`) : id,
       parentId,
       name,
       kind: "object",
